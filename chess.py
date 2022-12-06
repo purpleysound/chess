@@ -48,7 +48,14 @@ class Piece(pygame.sprite.Sprite):
         return f"{self.__class__.__name__} piece on rank {self.rank} on file {self.file}"
 
     def update_pos(self):
-        self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
+        new_mouse_pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(new_mouse_pos) and pygame.mouse.get_pressed()[0]:
+            dx = new_mouse_pos[0] - old_mouse_pos[0] + 32 #i don't know why you need to add 32 but it works
+            dy = new_mouse_pos[1] - old_mouse_pos[1] + 32
+            self.rect = self.image.get_rect(center=(self.rect[0]+dx, self.rect[1]+dy))
+        else:
+            self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
+
 
 class Pawn(Piece):
     def __init__(self, rank, file, colour):
@@ -96,6 +103,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+    for piece in pieces:
+        piece.update_pos()
+    old_mouse_pos = pygame.mouse.get_pos()
+
     update_display()
+    clock.tick(60)
 
 pygame.quit()
