@@ -13,7 +13,7 @@ def update_display():
     display.blit(BOARD, (0,0))
     pygame.display.update()
 
-def initialise_board(FEN=DEFAULT_FEN):
+def get_board_state(FEN=DEFAULT_FEN):
     global white_move
     pieces = []
     board_position = FEN.split(" ")[0]
@@ -66,7 +66,7 @@ class King(Piece):
         super().__init__(rank, file, colour)
 
 letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Queen, "k": King}
-pieces = initialise_board()
+pieces = get_board_state()
 print(pieces)
 
 running = True
