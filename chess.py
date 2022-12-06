@@ -5,12 +5,14 @@ clock = pygame.time.Clock()
 display = pygame.display.set_mode((800,800))
 pygame.display.set_caption("Chess Engine")
 
-BOARD = pygame.image.load("board.png")
+BOARD = pygame.image.load("board.png") #squares are 64px wide
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 def update_display():
     display.fill((80,80,80))
     display.blit(BOARD, (0,0))
+    for piece in pieces:
+        display.blit(piece.image, piece.rect)
     pygame.display.update()
 
 def get_board_state(FEN=DEFAULT_FEN):
@@ -24,13 +26,17 @@ def get_board_state(FEN=DEFAULT_FEN):
         gap_adjustment = 0
         for file_index, piece in enumerate(data):
             file = file_index + 1 + gap_adjustment
-            colour = "White" if piece.lower() == piece else "Black"
+            colour = "Black" if piece.lower() == piece else "White"
             if piece.lower() in letter_to_piece_dict:
                 pieces.append(letter_to_piece_dict[piece.lower()](rank, file, colour))
             else:
-                gap_adjustment += int(piece) - 1
-                
+                gap_adjustment += int(piece) - 1                
     return pieces
+
+def get_center_coordinates(rank: int, file: int) -> tuple:
+    file_coordinates = -32 + 64*file
+    rank_coordinates = 32 + 64*(8-rank)
+    return (file_coordinates, rank_coordinates)
 
 class Piece(pygame.sprite.Sprite):
     def __init__(self, rank, file, colour):
@@ -41,29 +47,44 @@ class Piece(pygame.sprite.Sprite):
     def __repr__(self):
         return f"{self.__class__.__name__} piece on rank {self.rank} on file {self.file}"
 
+    def update_pos(self):
+        self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
+
 class Pawn(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
+        self.image = pygame.transform.scale(pygame.image.load("wP.svg" if self.colour == "White" else "bP.svg"), (64,64))
+        self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 class Rook(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
+        self.image = pygame.transform.scale(pygame.image.load("wR.svg" if self.colour == "White" else "bR.svg"), (64,64))
+        self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
     
 class Knight(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
+        self.image = pygame.transform.scale(pygame.image.load("wN.svg" if self.colour == "White" else "bN.svg"), (64,64))
+        self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 class Bishop(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
+        self.image = pygame.transform.scale(pygame.image.load("wB.svg" if self.colour == "White" else "bB.svg"), (64,64))
+        self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 class Queen(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
+        self.image = pygame.transform.scale(pygame.image.load("wQ.svg" if self.colour == "White" else "bQ.svg"), (64,64))
+        self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 class King(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
+        self.image = pygame.transform.scale(pygame.image.load("wK.svg" if self.colour == "White" else "bK.svg"), (64,64))
+        self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Queen, "k": King}
 pieces = get_board_state()
