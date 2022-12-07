@@ -51,7 +51,7 @@ class Piece(pygame.sprite.Sprite):
         return f"{self.__class__.__name__} piece on rank {self.rank} on file {self.file}"
 
     def update_pos(self):
-        global piece_held
+        global piece_held, mouse_down
         if (self.rect.collidepoint(pygame.mouse.get_pos()) or self.dragging) and mouse_down and (not piece_held or self.dragging):
             self.dragging = True
             piece_held = True
@@ -114,13 +114,17 @@ while running:
             mouse_down = True
         if event.type == pygame.MOUSEBUTTONUP:
             mouse_down = False
-        if event.type == pygame.K_END:
-            get_board_state(FEN="8/8/8/8/8/8/8/8 w - - 0 1")
-        if event.type == pygame.K_HOME:
-            get_board_state()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_END:
+                pieces = get_board_state(FEN="8/8/8/8/8/8/8/8 w - - 0 1")
+            if event.key == pygame.K_HOME:
+                pieces = get_board_state()
 
     for piece in pieces:
         piece.update_pos()
+    if mouse_down and not piece_held:
+        mouse_down = False
 
     update_display()
     clock.tick(60)
