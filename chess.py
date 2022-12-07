@@ -13,6 +13,8 @@ def update_display():
     display.blit(BOARD, (0,0))
     for piece in pieces:
         display.blit(piece.image, piece.rect)
+        if piece.dragging: #should put moving piece on top, doesn't work
+            display.blit(piece.image, piece.rect)
     pygame.display.update()
 
 def get_board_state(FEN=DEFAULT_FEN):
@@ -112,6 +114,10 @@ while running:
             mouse_down = True
         if event.type == pygame.MOUSEBUTTONUP:
             mouse_down = False
+        if event.type == pygame.K_END:
+            get_board_state(FEN="8/8/8/8/8/8/8/8 w - - 0 1")
+        if event.type == pygame.K_HOME:
+            get_board_state()
 
     for piece in pieces:
         piece.update_pos()
