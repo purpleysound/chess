@@ -43,18 +43,22 @@ class Piece(pygame.sprite.Sprite):
         self.rank = rank
         self.file = file
         self.colour = colour
+        self.dragging = False
 
     def __repr__(self):
         return f"{self.__class__.__name__} piece on rank {self.rank} on file {self.file}"
 
     def update_pos(self):
-        new_mouse_pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(new_mouse_pos) and pygame.mouse.get_pressed()[0]:
-            dx = new_mouse_pos[0] - old_mouse_pos[0] + 32 #i don't know why you need to add 32 but it works
-            dy = new_mouse_pos[1] - old_mouse_pos[1] + 32
-            self.rect = self.image.get_rect(center=(self.rect[0]+dx, self.rect[1]+dy))
+        global piece_held
+        if (self.rect.collidepoint(pygame.mouse.get_pos()) or self.dragging) and mouse_down and (not piece_held or self.dragging):
+            self.dragging = True
+            piece_held = True
+            self.rect = self.image.get_rect(center=pygame.mouse.get_pos())
         else:
             self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
+            if not mouse_down:
+                self.dragging = False
+                piece_held = False
 
 
 class Pawn(Piece):
@@ -96,16 +100,21 @@ class King(Piece):
 letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Queen, "k": King}
 pieces = get_board_state()
 print(pieces)
+mouse_down = False
+piece_held = False
 
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_down = True
+        if event.type == pygame.MOUSEBUTTONUP:
+            mouse_down = False
 
     for piece in pieces:
         piece.update_pos()
-    old_mouse_pos = pygame.mouse.get_pos()
 
     update_display()
     clock.tick(60)
