@@ -66,6 +66,12 @@ class Piece(pygame.sprite.Sprite):
         else:
             if not mouse_down and self.dragging:
                 self.file, self.rank = coordinates_to_position(pygame.mouse.get_pos(), self)
+                for piece in pieces:
+                    if piece == self:
+                        pass
+                    else:
+                        if piece.rank == self.rank and piece.file == self.file:
+                            pieces.remove(piece)
             self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
             if not mouse_down:
                 self.dragging = False
@@ -110,7 +116,6 @@ class King(Piece):
 
 letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Queen, "k": King}
 pieces = FEN_to_pieces_list()
-print(pieces)
 mouse_down = False
 piece_held = False
 
