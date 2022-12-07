@@ -130,37 +130,37 @@ class Piece(pygame.sprite.Sprite):
 class Pawn(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
-        self.image = pygame.transform.scale(pygame.image.load("wP.svg" if self.colour == "White" else "bP.svg"), (64,64))
+        self.image = pygame.transform.smoothscale(pygame.image.load("wP.svg" if self.colour == "White" else "bP.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 class Rook(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
-        self.image = pygame.transform.scale(pygame.image.load("wR.svg" if self.colour == "White" else "bR.svg"), (64,64))
+        self.image = pygame.transform.smoothscale(pygame.image.load("wR.svg" if self.colour == "White" else "bR.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
     
 class Knight(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
-        self.image = pygame.transform.scale(pygame.image.load("wN.svg" if self.colour == "White" else "bN.svg"), (64,64))
+        self.image = pygame.transform.smoothscale(pygame.image.load("wN.svg" if self.colour == "White" else "bN.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 class Bishop(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
-        self.image = pygame.transform.scale(pygame.image.load("wB.svg" if self.colour == "White" else "bB.svg"), (64,64))
+        self.image = pygame.transform.smoothscale(pygame.image.load("wB.svg" if self.colour == "White" else "bB.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 class Queen(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
-        self.image = pygame.transform.scale(pygame.image.load("wQ.svg" if self.colour == "White" else "bQ.svg"), (64,64))
+        self.image = pygame.transform.smoothscale(pygame.image.load("wQ.svg" if self.colour == "White" else "bQ.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 class King(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
-        self.image = pygame.transform.scale(pygame.image.load("wK.svg" if self.colour == "White" else "bK.svg"), (64,64))
+        self.image = pygame.transform.smoothscale(pygame.image.load("wK.svg" if self.colour == "White" else "bK.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Queen, "k": King}
