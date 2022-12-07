@@ -42,7 +42,7 @@ def pieces_to_FEN() -> str:
     sort_rank = 8
     sort_file = 1
     sorted_pieces = []
-    while sort_rank > 1:
+    while sort_rank >= 1:
         for piece in pieces:
             if piece.rank == sort_rank and piece.file == sort_file:
                 sorted_pieces.append(piece)
@@ -50,7 +50,7 @@ def pieces_to_FEN() -> str:
         sort_file += 1
         if sort_file > 8:
             sort_file = 1
-            current_rank -= 1
+            sort_rank -= 1
 
     for piece in sorted_pieces:
         if piece.rank == current_rank and piece.file == current_file:
@@ -69,9 +69,10 @@ def pieces_to_FEN() -> str:
                 current_rank -= 1
                 FEN += "/"
                 rank_gap = current_rank - piece.rank
-            file_gap = piece.file - current_file 
-            FEN += str(file_gap)
-            FEN += piece_to_letter_dict[piece.__class__.__name__] if piece.colour == "White" else piece_to_letter_dict[piece.__class__.__name__].upper()
+            file_gap = piece.file - current_file
+            if file_gap != 0: 
+                FEN += str(file_gap)
+            FEN += piece_to_letter_dict[piece.__class__.__name__] if piece.colour == "Black" else piece_to_letter_dict[piece.__class__.__name__].upper()
             current_file += file_gap
 
         current_file += 1
@@ -79,6 +80,7 @@ def pieces_to_FEN() -> str:
             current_file = 1
             current_rank -= 1
             FEN += "/"
+    FEN = FEN[:-1] #removes final "/"
     return FEN
 
 
