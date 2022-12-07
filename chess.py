@@ -35,6 +35,53 @@ def FEN_to_pieces_list(FEN=DEFAULT_FEN):
                 gap_adjustment += int(piece) - 1                
     return pieces
 
+def pieces_to_FEN() -> str:
+    current_rank = 8
+    current_file = 1
+    FEN = ""
+    sort_rank = 8
+    sort_file = 1
+    sorted_pieces = []
+    while sort_rank > 1:
+        for piece in pieces:
+            if piece.rank == sort_rank and piece.file == sort_file:
+                sorted_pieces.append(piece)
+                break
+        sort_file += 1
+        if sort_file > 8:
+            sort_file = 1
+            current_rank -= 1
+
+    for piece in sorted_pieces:
+        if piece.rank == current_rank and piece.file == current_file:
+            FEN += piece_to_letter_dict[piece.__class__.__name__] if piece.colour == "Black" else piece_to_letter_dict[piece.__class__.__name__].upper()
+        elif piece.rank == current_rank:
+            file_gap = piece.file - current_file 
+            FEN += str(file_gap)
+            FEN += piece_to_letter_dict[piece.__class__.__name__] if piece.colour == "Black" else piece_to_letter_dict[piece.__class__.__name__].upper()
+            current_file += file_gap
+        else:
+            rank_gap = current_rank - piece.rank
+            while rank_gap >= 1:
+                file_gap = 9 - current_file 
+                FEN += str(file_gap)
+                current_file = 1
+                current_rank -= 1
+                FEN += "/"
+                rank_gap = current_rank - piece.rank
+            file_gap = piece.file - current_file 
+            FEN += str(file_gap)
+            FEN += piece_to_letter_dict[piece.__class__.__name__] if piece.colour == "White" else piece_to_letter_dict[piece.__class__.__name__].upper()
+            current_file += file_gap
+
+        current_file += 1
+        if current_file > 8:
+            current_file = 1
+            current_rank -= 1
+            FEN += "/"
+    return FEN
+
+
 def get_center_coordinates(rank: int, file: int) -> tuple:
     file_coordinates = -32 + 64*file
     rank_coordinates = 32 + 64*(8-rank)
@@ -55,7 +102,7 @@ class Piece(pygame.sprite.Sprite):
         self.dragging = False
 
     def __repr__(self):
-        return f"{self.__class__.__name__} piece on rank {self.rank} on file {self.file}"
+        return f"{self.colour} {self.__class__.__name__} piece on rank {self.rank} on file {self.file}"
 
     def update_pos(self):
         global piece_held, mouse_down
@@ -115,6 +162,7 @@ class King(Piece):
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Queen, "k": King}
+piece_to_letter_dict = {"Pawn": "p", "Rook": "r", "Knight": "n", "Bishop": "b", "Queen": "q", "King": "k"}
 pieces = FEN_to_pieces_list()
 mouse_down = False
 piece_held = False
@@ -134,6 +182,8 @@ while running:
                 pieces = FEN_to_pieces_list(FEN="8/8/8/8/8/8/8/8 w - - 0 1")
             if event.key == pygame.K_HOME:
                 pieces = FEN_to_pieces_list()
+            if event.key == pygame.K_f:
+                print(pieces_to_FEN())
 
     for piece in pieces:
         piece.update_pos()
