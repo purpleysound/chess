@@ -17,7 +17,7 @@ def update_display():
             display.blit(piece.image, piece.rect)
     pygame.display.update()
 
-def get_board_state(FEN=DEFAULT_FEN):
+def FEN_to_pieces_list(FEN=DEFAULT_FEN):
     global white_move
     pieces = []
     board_position = FEN.split(" ")[0]
@@ -40,6 +40,13 @@ def get_center_coordinates(rank: int, file: int) -> tuple:
     rank_coordinates = 32 + 64*(8-rank)
     return (file_coordinates, rank_coordinates)
 
+def coordinates_to_position(coordinates, piece):
+    if coordinates[0] > 512 or coordinates[1] > 512:
+        return piece.rank, piece.file
+    file = coordinates[0]//64 + 1
+    rank = 8 - coordinates[1]//64
+    return file, rank
+
 class Piece(pygame.sprite.Sprite):
     def __init__(self, rank, file, colour):
         self.rank = rank
@@ -57,6 +64,8 @@ class Piece(pygame.sprite.Sprite):
             piece_held = True
             self.rect = self.image.get_rect(center=pygame.mouse.get_pos())
         else:
+            if not mouse_down and self.dragging:
+                self.file, self.rank = coordinates_to_position(pygame.mouse.get_pos(), self)
             self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
             if not mouse_down:
                 self.dragging = False
@@ -100,7 +109,7 @@ class King(Piece):
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
 letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Queen, "k": King}
-pieces = get_board_state()
+pieces = FEN_to_pieces_list()
 print(pieces)
 mouse_down = False
 piece_held = False
@@ -117,9 +126,9 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_END:
-                pieces = get_board_state(FEN="8/8/8/8/8/8/8/8 w - - 0 1")
+                pieces = FEN_to_pieces_list(FEN="8/8/8/8/8/8/8/8 w - - 0 1")
             if event.key == pygame.K_HOME:
-                pieces = get_board_state()
+                pieces = FEN_to_pieces_list()
 
     for piece in pieces:
         piece.update_pos()
