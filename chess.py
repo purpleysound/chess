@@ -4,6 +4,7 @@ clock = pygame.time.Clock()
 
 display = pygame.display.set_mode((800,800))
 pygame.display.set_caption("Chess Engine")
+pygame.scrap.init()
 
 BOARD = pygame.image.load("board.png") #squares are 64px wide
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -52,7 +53,7 @@ def pieces_to_FEN() -> str:
             sort_file = 1
             sort_rank -= 1
 
-    for piece in sorted_pieces:
+    for piece in sorted_pieces: #doesn't fill rest of board with space after last piece
         if piece.rank == current_rank and piece.file == current_file:
             FEN += piece_to_letter_dict[piece.__class__.__name__] if piece.colour == "Black" else piece_to_letter_dict[piece.__class__.__name__].upper()
         elif piece.rank == current_rank:
@@ -81,6 +82,7 @@ def pieces_to_FEN() -> str:
             current_rank -= 1
             FEN += "/"
     FEN = FEN[:-1] #removes final "/"
+    FEN += " w KQkq - 0 1" #needs to be actually implemented in future
     return FEN
 
 
@@ -186,6 +188,11 @@ while running:
                 pieces = FEN_to_pieces_list()
             if event.key == pygame.K_f:
                 print(pieces_to_FEN())
+            if event.key == pygame.K_l:
+                clipboard = str(pygame.scrap.get(pygame.SCRAP_TEXT))
+                clipboard = clipboard[2:-5]
+                print(clipboard)
+                pieces = FEN_to_pieces_list(FEN=clipboard)
 
     for piece in pieces:
         piece.update_pos()
