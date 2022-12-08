@@ -1,7 +1,6 @@
 import pygame
 pygame.init()
 clock = pygame.time.Clock()
-
 display = pygame.display.set_mode((800,800))
 pygame.display.set_caption("Chess Engine")
 pygame.scrap.init()
@@ -83,7 +82,9 @@ def pieces_to_FEN() -> str:
             current_rank -= 1
             FEN += "/"
     FEN = FEN[:-1] #removes final "/"
-    FEN += " w KQkq - 0 1" #needs to be actually implemented in future
+    FEN += " "
+    FEN += "w" if white_move else "b"
+    FEN += " KQkq - 0 1" #needs to be actually implemented in future
     return FEN
 
 
@@ -94,7 +95,7 @@ def get_center_coordinates(rank: int, file: int) -> tuple:
 
 def coordinates_to_position(coordinates, piece):
     if coordinates[0] > 512 or coordinates[1] > 512:
-        return piece.rank, piece.file
+        return piece.file, piece.rank
     file = coordinates[0]//64 + 1
     rank = 8 - coordinates[1]//64
     return file, rank
@@ -110,14 +111,15 @@ class Piece(pygame.sprite.Sprite):
         return f"{self.colour} {self.__class__.__name__} piece on rank {self.rank} on file {self.file}"
 
     def update_pos(self):
-        global piece_held, mouse_down
-        if (self.rect.collidepoint(pygame.mouse.get_pos()) or self.dragging) and mouse_down and (not piece_held or self.dragging):
+        global piece_held, mouse_down, white_move
+        if (self.rect.collidepoint(pygame.mouse.get_pos()) or self.dragging) and mouse_down and (not piece_held or self.dragging) and (white_move and self.colour == "White" or not white_move and self.colour == "Black" or not game_mode):
             self.dragging = True
             piece_held = True
             self.rect = self.image.get_rect(center=pygame.mouse.get_pos())
         else:
             if not mouse_down and self.dragging:
                 self.file, self.rank = coordinates_to_position(pygame.mouse.get_pos(), self)
+                white_move = False if white_move else True #should be contained in get_legal_move function in future
                 for piece in pieces:
                     if piece == self:
                         pass
@@ -171,6 +173,7 @@ piece_to_letter_dict = {"Pawn": "p", "Rook": "r", "Knight": "n", "Bishop": "b", 
 pieces = FEN_to_pieces_list()
 mouse_down = False
 piece_held = False
+game_mode = False
 
 running = True
 while running:
@@ -192,8 +195,9 @@ while running:
             if event.key == pygame.K_l:
                 clipboard = str(pygame.scrap.get(pygame.SCRAP_TEXT))
                 clipboard = clipboard[2:-5]
-                print(clipboard)
                 pieces = FEN_to_pieces_list(FEN=clipboard)
+            if event.key == pygame.K_g:
+                game_mode = True if not game_mode else False
 
     for piece in pieces:
         piece.update_pos()
