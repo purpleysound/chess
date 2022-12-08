@@ -5,6 +5,8 @@ display = pygame.display.set_mode((800,800))
 pygame.display.set_caption("Chess Engine")
 pygame.scrap.init()
 
+from openings import opening_explorer
+
 BOARD = pygame.image.load("images/board.png") #squares are 64px wide
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -198,6 +200,8 @@ while running:
                 pieces = FEN_to_pieces_list(FEN=clipboard)
             if event.key == pygame.K_g:
                 game_mode = True if not game_mode else False
+            if event.key == pygame.K_o:
+                chosen_opening = opening_explorer.open_window()
 
     for piece in pieces:
         piece.update_pos()
