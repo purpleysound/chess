@@ -14,7 +14,8 @@ def update_display():
     display.blit(BOARD, (0,0))
     for piece in pieces:
         display.blit(piece.image, piece.rect)
-        if piece.dragging: #should put moving piece on top, doesn't work
+    for piece in pieces:
+        if piece.dragging:
             display.blit(piece.image, piece.rect)
     pygame.display.update()
 
