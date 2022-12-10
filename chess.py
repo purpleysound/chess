@@ -202,6 +202,7 @@ while running:
                 game_mode = True if not game_mode else False
             if event.key == pygame.K_o:
                 chosen_opening = opening_explorer.open_window()
+                pieces = FEN_to_pieces_list(FEN=chosen_opening)
 
     for piece in pieces:
         piece.update_pos()
