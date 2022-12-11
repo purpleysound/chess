@@ -7,30 +7,30 @@ with open("openings/eco.json", "r") as f:
 name_FEN_index_triplets = [[opening["eco"]+": "+opening["name"], opening["fen"], i] for i, opening in enumerate(openings)]
 name_FEN_index_triplets.sort()
 
-def update_searchbox(data: list, suggested):
+def _update_searchbox(data: list, suggested):
     suggested.delete(0, tk.END)
     for item in data:
         suggested.insert(tk.END, item)
 
-def delay_label(event, chosen_display, suggested, chosen_opening, window):
-    window.after(100, lambda: update_label(chosen_display, suggested, chosen_opening))
+def _delay_label(event, chosen_display, suggested, chosen_opening, window):
+    window.after(100, lambda: _update_label(chosen_display, suggested, chosen_opening))
 
-def update_label(chosen_display, suggested, chosen_opening):
+def _update_label(chosen_display, suggested, chosen_opening):
     chosen_opening.set(suggested.get(tk.ACTIVE))
     chosen_display["text"] = chosen_opening.get()
 
-def check(event, search_box, suggested):
+def _check(event, search_box, suggested):
     text = search_box.get()
     if not text:
         data = [opening[0] for opening in name_FEN_index_triplets]
     else:
         data = []
         for item in [opening[0] for opening in name_FEN_index_triplets]:
-            if text.lower() in item.lower():
+            if "".join(letter for letter in text.lower() if letter in "abcdefghijklmnopqrstuvwxyz") in "".join(letter for letter in item.lower() if letter in "abcdefghijklmnopqrstuvwxyz"):
                 data.append(item)
-    update_searchbox(data, suggested)
+    _update_searchbox(data, suggested)
 
-def return_opening(opening, window):
+def _return_opening(opening, window):
     global FEN_to_return
     for triplet in name_FEN_index_triplets:
         if opening == triplet[0]:
@@ -48,7 +48,7 @@ def open_window():
     top_label.pack(pady=10)
     chosen_display = tk.Label(window, text=chosen_opening.get(), font=("Segoe UI",15))
     chosen_display.pack()
-    return_button = tk.Button(text="Confirm", command=lambda: return_opening(chosen_opening.get(), window)) #idk how to return something back to the main program
+    return_button = tk.Button(text="Confirm", command=lambda: _return_opening(chosen_opening.get(), window))
     return_button.pack(pady=10)
     search_label = tk.Label(text="Search:")
     search_label.pack()
@@ -56,9 +56,9 @@ def open_window():
     search_box.pack(pady=10)
     suggested = tk.Listbox(window, width=100)
     suggested.pack()
-    update_searchbox([opening[0] for opening in name_FEN_index_triplets], suggested)
-    suggested.bind("<<ListboxSelect>>", lambda x: delay_label(x, chosen_display, suggested, chosen_opening, window))
-    search_box.bind("<KeyRelease>", lambda x: check(x, search_box, suggested))
+    _update_searchbox([opening[0] for opening in name_FEN_index_triplets], suggested)
+    suggested.bind("<<ListboxSelect>>", lambda x: _delay_label(x, chosen_display, suggested, chosen_opening, window))
+    search_box.bind("<KeyRelease>", lambda x: _check(x, search_box, suggested))
     window.mainloop()
     return FEN_to_return
 
