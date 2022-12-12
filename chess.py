@@ -11,7 +11,7 @@ BOARD = pygame.image.load("images/board.png") #squares are 64px wide
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 def update_display():
-    display.fill((80,80,80))
+    display.fill((255,150,180))
     display.blit(BOARD, (0,0))
     for piece in pieces:
         display.blit(piece.image, piece.rect)
@@ -21,7 +21,7 @@ def update_display():
     pygame.display.update()
 
 def FEN_to_pieces_list(FEN=DEFAULT_FEN):
-    global white_move
+    global white_move, occupied_spaces
     pieces = []
     board_position = FEN.split(" ")[0]
     white_move = True if FEN.split(" ")[1] == "w" else False
@@ -35,7 +35,8 @@ def FEN_to_pieces_list(FEN=DEFAULT_FEN):
             if piece.lower() in letter_to_piece_dict:
                 pieces.append(letter_to_piece_dict[piece.lower()](rank, file, colour))
             else:
-                gap_adjustment += int(piece) - 1                
+                gap_adjustment += int(piece) - 1
+    occupied_spaces = [(piece.file, piece.rank) for piece in pieces]             
     return pieces
 
 def pieces_to_FEN() -> str:
@@ -120,19 +121,25 @@ class Piece(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(center=pygame.mouse.get_pos())
         else:
             if not mouse_down and self.dragging:
-                self.file, self.rank = coordinates_to_position(pygame.mouse.get_pos(), self)
-                white_move = False if white_move else True #should be contained in get_legal_move function in future
-                for piece in pieces:
-                    if piece == self:
-                        pass
-                    else:
-                        if piece.rank == self.rank and piece.file == self.file:
-                            pieces.remove(piece)
+                if self.legal_move(coordinates_to_position(pygame.mouse.get_pos(), self)):
+                    occupied_spaces.remove((self.file, self.rank))
+                    self.file, self.rank = coordinates_to_position(pygame.mouse.get_pos(), self)
+                    occupied_spaces.append((self.file, self.rank))
+                    white_move = False if white_move else True #should be contained in get_legal_move function in future
+                    for piece in pieces:
+                        if piece == self:
+                            pass
+                        else:
+                            if piece.rank == self.rank and piece.file == self.file:
+                                pieces.remove(piece)
+                                occupied_spaces.remove((self.file, self.rank))
             self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
             if not mouse_down:
                 self.dragging = False
                 piece_held = False
 
+    def legal_move(self, destination: tuple) -> bool:
+        return True
 
 class Pawn(Piece):
     def __init__(self, rank, file, colour):
@@ -173,6 +180,7 @@ class King(Piece):
 letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Queen, "k": King}
 piece_to_letter_dict = {"Pawn": "p", "Rook": "r", "Knight": "n", "Bishop": "b", "Queen": "q", "King": "k"}
 pieces = FEN_to_pieces_list()
+occupied_spaces = [(piece.file, piece.rank) for piece in pieces]
 mouse_down = False
 piece_held = False
 game_mode = False
