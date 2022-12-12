@@ -26,7 +26,7 @@ def _check(event, search_box, suggested):
     else:
         data = []
         for item in [opening[0] for opening in name_FEN_index_triplets]:
-            if "".join(letter for letter in text.lower() if letter in "abcdefghijklmnopqrstuvwxyz") in "".join(letter for letter in item.lower() if letter in "abcdefghijklmnopqrstuvwxyz"):
+            if "".join(letter for letter in text.lower() if letter in "abcdefghijklmnopqrstuvwxyz0123456789") in "".join(letter for letter in item.lower() if letter in "abcdefghijklmnopqrstuvwxyz0123456789"):
                 data.append(item)
     _update_searchbox(data, suggested)
 
