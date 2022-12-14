@@ -9,16 +9,27 @@ from openings import opening_explorer
 
 BOARD = pygame.image.load("images/board.png") #squares are 64px wide
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+BACKGROUND_COLOUR = (64,64,64)
+contrasting_colour = (255-BACKGROUND_COLOUR[0], 255-BACKGROUND_COLOUR[1], 255-BACKGROUND_COLOUR[2])
+FONT = pygame.font.SysFont("Segoe UI",30)
+
 
 def update_display():
-    display.fill((255,150,180))
+    display.fill(BACKGROUND_COLOUR)
     display.blit(BOARD, (0,0))
     for piece in pieces:
         display.blit(piece.image, piece.rect)
     for piece in pieces:
         if piece.dragging:
             display.blit(piece.image, piece.rect)
+    for text in texts:
+        display.blit(text[0], text[1])
     pygame.display.update()
+
+def initialise_text() -> list:
+    texts = []
+    texts.append(((FONT.render("Press O to open the opening explorer", False, contrasting_colour)), (0, 512)))
+    return texts
 
 def FEN_to_pieces_list(FEN=DEFAULT_FEN):
     global white_move, occupied_spaces
@@ -181,6 +192,7 @@ letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Que
 piece_to_letter_dict = {"Pawn": "p", "Rook": "r", "Knight": "n", "Bishop": "b", "Queen": "q", "King": "k"}
 pieces = FEN_to_pieces_list()
 occupied_spaces = [(piece.file, piece.rank) for piece in pieces]
+texts = initialise_text()
 mouse_down = False
 piece_held = False
 game_mode = False
