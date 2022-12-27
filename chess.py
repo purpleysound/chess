@@ -22,14 +22,14 @@ def update_display():
     for piece in pieces:
         if piece.dragging:
             display.blit(piece.image, piece.rect)
-    for text in texts:
+    for text in initialise_text():
         display.blit(text[0], text[1])
     pygame.display.update()
 
 def initialise_text() -> list:
-    texts = []
-    texts.append(((FONT.render("Press O to open the opening explorer", False, contrasting_colour)), (0, 512)))
-    return texts
+    yield (FONT.render("Press O to open the opening explorer", True, contrasting_colour), (0, 512))
+    yield (FONT.render(f"Current Mode: {'Game Mode' if game_mode else 'Setup Mode'} (press G to toggle)", True, contrasting_colour), (0, 544))
+    yield (FONT.render(f"{'White' if white_move else 'Black'}'s move", True, contrasting_colour), (0, 576))
 
 def FEN_to_pieces_list(FEN=DEFAULT_FEN):
     global white_move, occupied_spaces
@@ -126,7 +126,7 @@ class Piece(pygame.sprite.Sprite):
 
     def update_pos(self):
         global piece_held, mouse_down, white_move
-        if (self.rect.collidepoint(pygame.mouse.get_pos()) or self.dragging) and mouse_down and (not piece_held or self.dragging) and (white_move and self.colour == "White" or not white_move and self.colour == "Black" or not game_mode):
+        if (self.rect.collidepoint(pygame.mouse.get_pos()) or self.dragging) and mouse_down and (not piece_held or self.dragging):
             self.dragging = True
             piece_held = True
             self.rect = self.image.get_rect(center=pygame.mouse.get_pos())
@@ -136,7 +136,8 @@ class Piece(pygame.sprite.Sprite):
                     occupied_spaces.remove((self.file, self.rank))
                     self.file, self.rank = coordinates_to_position(pygame.mouse.get_pos(), self)
                     occupied_spaces.append((self.file, self.rank))
-                    white_move = False if white_move else True #should be contained in get_legal_move function in future
+                    if game_mode:
+                        white_move = False if white_move else True
                     for piece in pieces:
                         if piece == self:
                             pass
@@ -150,6 +151,10 @@ class Piece(pygame.sprite.Sprite):
                 piece_held = False
 
     def legal_move(self, destination: tuple) -> bool:
+        if not game_mode:
+            return True
+        if not (white_move and self.colour == "White" or not white_move and self.colour == "Black"):
+            return False
         return True
 
 class Pawn(Piece):
@@ -192,7 +197,6 @@ letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Que
 piece_to_letter_dict = {"Pawn": "p", "Rook": "r", "Knight": "n", "Bishop": "b", "Queen": "q", "King": "k"}
 pieces = FEN_to_pieces_list()
 occupied_spaces = [(piece.file, piece.rank) for piece in pieces]
-texts = initialise_text()
 mouse_down = False
 piece_held = False
 game_mode = False
@@ -215,9 +219,7 @@ while running:
             if event.key == pygame.K_f:
                 print(pieces_to_FEN())
             if event.key == pygame.K_l:
-                clipboard = str(pygame.scrap.get(pygame.SCRAP_TEXT))
-                clipboard = clipboard[2:-5]
-                pieces = FEN_to_pieces_list(FEN=clipboard)
+                pieces = FEN_to_pieces_list(FEN=str(pygame.scrap.get(pygame.SCRAP_TEXT))[2:-5])
             if event.key == pygame.K_g:
                 game_mode = True if not game_mode else False
             if event.key == pygame.K_o:
