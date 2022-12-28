@@ -1,4 +1,5 @@
 import pygame
+from collections import defaultdict
 pygame.init()
 clock = pygame.time.Clock()
 display = pygame.display.set_mode((800,800))
@@ -32,7 +33,7 @@ def initialise_text() -> list:
     yield (FONT.render(f"{'White' if white_move else 'Black'}'s move", True, contrasting_colour), (0, 576))
 
 def FEN_to_pieces_list(FEN=DEFAULT_FEN):
-    global white_move, occupied_spaces
+    global white_move, occupied_spaces, occupied_colour
     pieces = []
     board_position = FEN.split(" ")[0]
     white_move = True if FEN.split(" ")[1] == "w" else False
@@ -47,7 +48,8 @@ def FEN_to_pieces_list(FEN=DEFAULT_FEN):
                 pieces.append(letter_to_piece_dict[piece.lower()](rank, file, colour))
             else:
                 gap_adjustment += int(piece) - 1
-    occupied_spaces = [(piece.file, piece.rank) for piece in pieces]             
+    occupied_spaces = set([(piece.file, piece.rank) for piece in pieces])
+    occupied_colour = defaultdict(lambda: None, {(piece.file, piece.rank): piece.colour for piece in pieces})       
     return pieces
 
 def pieces_to_FEN() -> str:
@@ -115,7 +117,7 @@ def coordinates_to_position(coordinates, piece):
     return file, rank
 
 class Piece(pygame.sprite.Sprite):
-    def __init__(self, rank, file, colour):
+    def __init__(self, rank: int, file: int, colour):
         self.rank = rank
         self.file = file
         self.colour = colour
@@ -133,9 +135,11 @@ class Piece(pygame.sprite.Sprite):
         else:
             if not mouse_down and self.dragging:
                 if self.legal_move(coordinates_to_position(pygame.mouse.get_pos(), self)):
-                    occupied_spaces.remove((self.file, self.rank))
+                    occupied_spaces.discard((self.file, self.rank))
+                    occupied_colour[(self.file, self.rank)] = None
                     self.file, self.rank = coordinates_to_position(pygame.mouse.get_pos(), self)
-                    occupied_spaces.append((self.file, self.rank))
+                    occupied_spaces.add((self.file, self.rank))
+                    occupied_colour[(self.file, self.rank)] = self.colour
                     if game_mode:
                         white_move = False if white_move else True
                     for piece in pieces:
@@ -144,7 +148,6 @@ class Piece(pygame.sprite.Sprite):
                         else:
                             if piece.rank == self.rank and piece.file == self.file:
                                 pieces.remove(piece)
-                                occupied_spaces.remove((self.file, self.rank))
             self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
             if not mouse_down:
                 self.dragging = False
@@ -155,6 +158,12 @@ class Piece(pygame.sprite.Sprite):
             return True
         if not (white_move and self.colour == "White" or not white_move and self.colour == "Black"):
             return False
+        new_file, new_rank = destination
+        if new_file == self.file and new_rank == self.rank:
+            return False
+        if occupied_colour[destination] == self.colour:
+            return False
+        #need to add avoiding check
         return True
 
 class Pawn(Piece):
@@ -163,17 +172,68 @@ class Pawn(Piece):
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wP.svg" if self.colour == "White" else "images/bP.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
+    def legal_move(self, destination: tuple) -> bool:
+        if not super().legal_move(destination):
+            return False
+        if not game_mode:
+            return True
+        new_file, new_rank = destination
+        moved = False if self.colour == "White" and self.rank == 2 or self.colour == "Black" and self.rank == 7 else True
+        direction = +1 if self.colour == "White" else -1
+        if new_file == self.file and (new_rank == self.rank+direction or new_rank == self.rank+2*direction and not moved) and destination not in occupied_spaces: #moving forward
+            if new_rank == self.rank+2*direction and (self.file, self.rank+direction) in occupied_spaces:
+                return False
+            return True
+        if (new_file == self.file+1 or new_file == self.file-1) and new_rank == self.rank+direction and destination in occupied_spaces: #moving diagonally
+            return True
+        #en passant not yet implemented
+        return False
+
 class Rook(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wR.svg" if self.colour == "White" else "images/bR.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
-    
+
+    def legal_move(self, destination: tuple) -> bool:
+        if not super().legal_move(destination):
+            return False
+        if not game_mode:
+            return True
+        new_file, new_rank = destination
+        if new_file != self.file and new_rank != self.rank:
+            return False
+        if new_file == self.file:
+            for rank in range(self.rank, new_rank, +1 if self.rank < new_rank else -1):
+                if (new_file, rank) == (self.file, self.rank):
+                    continue
+                if (new_file, rank) in occupied_spaces:
+                    return False
+        else:
+            for file in range(self.file, new_file, +1 if self.file < new_file else -1):
+                if (file, new_rank) == (self.file, self.rank):
+                    continue
+                if (file, new_rank) in occupied_spaces:
+                    return False
+        return True
+
 class Knight(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wN.svg" if self.colour == "White" else "images/bN.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
+
+    def legal_move(self, destination: tuple) -> bool:
+        if not super().legal_move(destination):
+            return False
+        if not game_mode:
+            return True
+        new_file, new_rank = destination
+        dfile = new_file - self.file
+        drank = new_rank - self.rank
+        if abs(dfile) == 2 and abs(drank) == 1 or abs(dfile) == 1 and abs(drank) == 2:
+            return True
+        return False
 
 class Bishop(Piece):
     def __init__(self, rank, file, colour):
@@ -181,11 +241,39 @@ class Bishop(Piece):
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wB.svg" if self.colour == "White" else "images/bB.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
+    def legal_move(self, destination: tuple) -> bool:
+        if not super().legal_move(destination):
+            return False
+        if not game_mode:
+            return True
+        new_file, new_rank = destination
+        dfile = new_file - self.file
+        drank = new_rank - self.rank
+        if abs(dfile) != abs(drank):
+            return False
+        direction = tuple(map(lambda x: +1 if x else -1, (dfile>0, drank>0))) #unit vector
+        for distance in range(abs(drank)):
+            if distance == 0:
+                continue
+            if (self.file + distance*direction[0], self.rank + distance*direction[1]) in occupied_spaces:
+                return False
+        return True
+
 class Queen(Piece):
     def __init__(self, rank, file, colour):
         super().__init__(rank, file, colour)
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wQ.svg" if self.colour == "White" else "images/bQ.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
+
+    def legal_move(self, destination: tuple) -> bool:
+        if not super().legal_move(destination):
+            return False
+        if not game_mode:
+            return True
+        if Bishop(self.rank, self.file, self.colour).legal_move(destination) or Rook(self.rank, self.file, self.colour).legal_move(destination):
+            return True
+        return False
+        
 
 class King(Piece):
     def __init__(self, rank, file, colour):
@@ -193,10 +281,22 @@ class King(Piece):
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wK.svg" if self.colour == "White" else "images/bK.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
+    def legal_move(self, destination: tuple) -> bool:
+        if not super().legal_move(destination):
+            return False
+        if not game_mode:
+            return True
+        new_file, new_rank = destination
+        dfile = new_file - self.file
+        drank = new_rank - self.rank
+        if dfile > 1 or drank > 1:
+            return False
+        #need to add castling
+        return True
+
 letter_to_piece_dict = {"p": Pawn, "r": Rook, "n": Knight, "b": Bishop, "q": Queen, "k": King}
 piece_to_letter_dict = {"Pawn": "p", "Rook": "r", "Knight": "n", "Bishop": "b", "Queen": "q", "King": "k"}
 pieces = FEN_to_pieces_list()
-occupied_spaces = [(piece.file, piece.rank) for piece in pieces]
 mouse_down = False
 piece_held = False
 game_mode = False
