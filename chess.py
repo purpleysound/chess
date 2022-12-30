@@ -123,6 +123,13 @@ def coordinates_to_position(coordinates, piece):
     rank = 8 - coordinates[1]//64
     return file, rank
 
+def get_legal_moves(pieces: list):
+    for piece in pieces:
+        for file in range(1,9):
+            for rank in range(1,9):
+                if piece.legal_move((file, rank)):
+                    yield (piece, file, rank)
+
 class Piece(pygame.sprite.Sprite):
     def __init__(self, rank: int, file: int, colour):
         self.rank = rank
@@ -160,7 +167,9 @@ class Piece(pygame.sprite.Sprite):
                 self.dragging = False
                 piece_held = False
 
-    def legal_move(self, destination: tuple) -> bool:
+    def legal_move(self, destination: tuple, occupied_colour=None) -> bool:
+        if occupied_colour is None:
+            occupied_colour = globals()["occupied_colour"]
         if not game_mode:
             return True
         if not (white_move and self.colour == "White" or not white_move and self.colour == "Black"):
@@ -179,8 +188,12 @@ class Pawn(Piece):
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wP.svg" if self.colour == "White" else "images/bP.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
-    def legal_move(self, destination: tuple) -> bool:
-        if not super().legal_move(destination):
+    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
+        if occupied_spaces is None:
+            occupied_spaces = globals()["occupied_spaces"] #globals huhuhuhuhuhuhu
+        if occupied_colour is None:
+            occupied_colour = globals()["occupied_colour"]
+        if not super().legal_move(destination, occupied_colour=occupied_colour):
             return False
         if not game_mode:
             return True
@@ -202,8 +215,12 @@ class Rook(Piece):
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wR.svg" if self.colour == "White" else "images/bR.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
-    def legal_move(self, destination: tuple) -> bool:
-        if not super().legal_move(destination):
+    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
+        if occupied_spaces is None:
+            occupied_spaces = globals()["occupied_spaces"]
+        if occupied_colour is None:
+            occupied_colour = globals()["occupied_colour"]
+        if not super().legal_move(destination, occupied_colour=occupied_colour):
             return False
         if not game_mode:
             return True
@@ -230,8 +247,12 @@ class Knight(Piece):
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wN.svg" if self.colour == "White" else "images/bN.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
-    def legal_move(self, destination: tuple) -> bool:
-        if not super().legal_move(destination):
+    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
+        if occupied_spaces is None:
+            occupied_spaces = globals()["occupied_spaces"]
+        if occupied_colour is None:
+            occupied_colour = globals()["occupied_colour"]
+        if not super().legal_move(destination, occupied_colour=occupied_colour):
             return False
         if not game_mode:
             return True
@@ -248,8 +269,12 @@ class Bishop(Piece):
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wB.svg" if self.colour == "White" else "images/bB.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
-    def legal_move(self, destination: tuple) -> bool:
-        if not super().legal_move(destination):
+    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
+        if occupied_spaces is None:
+            occupied_spaces = globals()["occupied_spaces"]
+        if occupied_colour is None:
+            occupied_colour = globals()["occupied_colour"]
+        if not super().legal_move(destination, occupied_colour=occupied_colour):
             return False
         if not game_mode:
             return True
@@ -272,8 +297,12 @@ class Queen(Piece):
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wQ.svg" if self.colour == "White" else "images/bQ.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
-    def legal_move(self, destination: tuple) -> bool:
-        if not super().legal_move(destination):
+    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
+        if occupied_spaces is None:
+            occupied_spaces = globals()["occupied_spaces"]
+        if occupied_colour is None:
+            occupied_colour = globals()["occupied_colour"]
+        if not super().legal_move(destination, occupied_colour=occupied_colour):
             return False
         if not game_mode:
             return True
@@ -288,8 +317,12 @@ class King(Piece):
         self.image = pygame.transform.smoothscale(pygame.image.load("images/wK.svg" if self.colour == "White" else "images/bK.svg"), (64,64))
         self.rect = self.image.get_rect(center=get_center_coordinates(self.rank,self.file))
 
-    def legal_move(self, destination: tuple) -> bool:
-        if not super().legal_move(destination):
+    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
+        if occupied_spaces is None:
+            occupied_spaces = globals()["occupied_spaces"]
+        if occupied_colour is None:
+            occupied_colour = globals()["occupied_colour"]
+        if not super().legal_move(destination, occupied_colour=occupied_colour):
             return False
         if not game_mode:
             return True
@@ -333,6 +366,9 @@ while running:
                 chosen_opening = opening_explorer.open_window()
                 if chosen_opening:
                     pieces = FEN_to_pieces_list(FEN=chosen_opening)
+            if event.key == pygame.K_p:
+                print(list(get_legal_moves(pieces)))
+
 
     for piece in pieces:
         piece.update_pos()
