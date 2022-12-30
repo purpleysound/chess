@@ -27,7 +27,7 @@ def update_display():
         display.blit(text[0], text[1])
     pygame.display.update()
 
-def initialise_text() -> list:
+def initialise_text():
     yield (FONT.render("Press O to open the opening explorer", True, contrasting_colour), (0, 512))
     yield (FONT.render(f"Current Mode: {'Game Mode' if game_mode else 'Setup Mode'} (press G to toggle)", True, contrasting_colour), (0, 544))
     yield (FONT.render(f"{'White' if white_move else 'Black'}'s move", True, contrasting_colour), (0, 576))
@@ -69,7 +69,7 @@ def pieces_to_FEN() -> str:
             sort_file = 1
             sort_rank -= 1
 
-    for piece in sorted_pieces: #doesn't fill rest of board with space after last piece
+    for piece in sorted_pieces:
         if piece.rank == current_rank and piece.file == current_file:
             FEN += piece_to_letter_dict[piece.__class__.__name__] if piece.colour == "Black" else piece_to_letter_dict[piece.__class__.__name__].upper()
         elif piece.rank == current_rank:
@@ -97,10 +97,17 @@ def pieces_to_FEN() -> str:
             current_file = 1
             current_rank -= 1
             FEN += "/"
+    while current_rank >= 1:
+        FEN += str(9 - current_file)
+        current_file = 1
+        FEN += "/"
+        current_rank -= 1
+
     FEN = FEN[:-1] #removes final "/"
     FEN += " "
     FEN += "w" if white_move else "b"
-    FEN += " KQkq - 0 1" #needs to be actually implemented in future
+    FEN += " "
+    FEN += "KQkq - 0 1" #needs to be actually implemented in future
     return FEN
 
 
