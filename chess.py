@@ -27,33 +27,43 @@ class Piece(pygame.sprite.Sprite):
         return f"{self.colour} {self.__class__.__name__} piece on rank {self.rank} on file {self.file}"
 
     def update_pos(self):
-        global piece_held, mouse_down, white_move
+        global piece_held, mouse_down, occupied_spaces, occupied_colour
         if (self.rect.collidepoint(pygame.mouse.get_pos()) or self.dragging) and mouse_down and (not piece_held or self.dragging):
             self.dragging = True
             piece_held = True
             self.rect = self.image.get_rect(center=pygame.mouse.get_pos())
         else:
             if not mouse_down and self.dragging:
-                if self.legal_move(coordinates_to_position(pygame.mouse.get_pos(), self)):
-                    occupied_spaces.discard((self.file, self.rank))
-                    occupied_colour[(self.file, self.rank)] = None
-                    self.file, self.rank = coordinates_to_position(
-                        pygame.mouse.get_pos(), self)
-                    occupied_spaces.add((self.file, self.rank))
-                    occupied_colour[(self.file, self.rank)] = self.colour
-                    if game_mode:
-                        white_move = False if white_move else True
-                    for piece in pieces:
-                        if piece == self:
-                            pass
-                        else:
-                            if piece.rank == self.rank and piece.file == self.file:
-                                pieces.remove(piece)
-            self.rect = self.image.get_rect(
-                center=get_center_coordinates(self.rank, self.file))
+                occupied_spaces, occupied_colour = self.do_move(coordinates_to_position(pygame.mouse.get_pos(), self))
+                self.rect = self.image.get_rect(
+                    center=get_center_coordinates(self.rank, self.file))
             if not mouse_down:
                 self.dragging = False
                 piece_held = False
+
+    def do_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None):
+        global white_move
+        if target_occupied_spaces is None:
+            target_occupied_spaces = occupied_spaces
+        if target_occupied_colour is None:
+            target_occupied_colour = occupied_colour
+
+        if self.legal_move(destination):
+            occupied_spaces.discard((self.file, self.rank))
+            occupied_colour[(self.file, self.rank)] = None
+            self.file, self.rank = coordinates_to_position(
+                        pygame.mouse.get_pos(), self)
+            occupied_spaces.add((self.file, self.rank))
+            occupied_colour[(self.file, self.rank)] = self.colour
+            if game_mode:
+                white_move = False if white_move else True
+            for piece in pieces:
+                if piece == self:
+                    pass
+                else:
+                    if piece.rank == self.rank and piece.file == self.file:
+                        pieces.remove(piece)
+        return target_occupied_spaces, target_occupied_colour
 
     def legal_move(self, destination: tuple, occupied_colour=None) -> bool:
         if occupied_colour is None:
@@ -349,7 +359,7 @@ def get_center_coordinates(rank: int, file: int) -> tuple:
     return (file_coordinates, rank_coordinates)
 
 
-def coordinates_to_position(coordinates, piece):
+def coordinates_to_position(coordinates: tuple, piece: Piece):
     if coordinates[0] > 512 or coordinates[1] > 512:
         return piece.file, piece.rank
     file = coordinates[0]//64 + 1
@@ -362,7 +372,7 @@ def get_legal_moves(pieces: list):
         for file in range(1, 9):
             for rank in range(1, 9):
                 if piece.legal_move((file, rank)):
-                    yield (piece, file, rank)
+                    yield (piece, (file, rank))
 
 
 letter_to_piece_dict = {"p": Pawn, "r": Rook,
