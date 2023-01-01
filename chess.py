@@ -65,9 +65,9 @@ class Piece(pygame.sprite.Sprite):
                         pieces.remove(piece)
         return target_occupied_spaces, target_occupied_colour
 
-    def legal_move(self, destination: tuple, occupied_colour=None) -> bool:
-        if occupied_colour is None:
-            occupied_colour = globals()["occupied_colour"]
+    def legal_move(self, destination: tuple, target_occupied_colour=None) -> bool:
+        if target_occupied_colour is None:
+            target_occupied_colour = occupied_colour
         if not game_mode:
             return True
         if not (white_move and self.colour == "White" or not white_move and self.colour == "Black"):
@@ -75,7 +75,7 @@ class Piece(pygame.sprite.Sprite):
         new_file, new_rank = destination
         if new_file == self.file and new_rank == self.rank:
             return False
-        if occupied_colour[destination] == self.colour:
+        if target_occupied_colour[destination] == self.colour:
             return False
         # need to add avoiding check
         return True
@@ -89,24 +89,23 @@ class Pawn(Piece):
         self.rect = self.image.get_rect(
             center=get_center_coordinates(self.rank, self.file))
 
-    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
-        if occupied_spaces is None:
-            # globals huhuhuhuhuhuhu
-            occupied_spaces = globals()["occupied_spaces"]
-        if occupied_colour is None:
-            occupied_colour = globals()["occupied_colour"]
-        if not super().legal_move(destination, occupied_colour=occupied_colour):
+    def legal_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None) -> bool:
+        if target_occupied_spaces is None:
+            target_occupied_spaces = occupied_spaces
+        if target_occupied_colour is None:
+            target_occupied_colour = occupied_colour
+        if not super().legal_move(destination, target_occupied_colour=target_occupied_colour):
             return False
         if not game_mode:
             return True
         new_file, new_rank = destination
         moved = False if self.colour == "White" and self.rank == 2 or self.colour == "Black" and self.rank == 7 else True
         direction = +1 if self.colour == "White" else -1
-        if new_file == self.file and (new_rank == self.rank+direction or new_rank == self.rank+2*direction and not moved) and destination not in occupied_spaces:  # moving forward
-            if new_rank == self.rank+2*direction and (self.file, self.rank+direction) in occupied_spaces:
+        if new_file == self.file and (new_rank == self.rank+direction or new_rank == self.rank+2*direction and not moved) and destination not in target_occupied_spaces:  # moving forward
+            if new_rank == self.rank+2*direction and (self.file, self.rank+direction) in target_occupied_spaces:
                 return False
             return True
-        if (new_file == self.file+1 or new_file == self.file-1) and new_rank == self.rank+direction and destination in occupied_spaces:  # moving diagonally
+        if (new_file == self.file+1 or new_file == self.file-1) and new_rank == self.rank+direction and destination in target_occupied_spaces:  # moving diagonally
             return True
         # en passant not yet implemented
         return False
@@ -120,12 +119,12 @@ class Rook(Piece):
         self.rect = self.image.get_rect(
             center=get_center_coordinates(self.rank, self.file))
 
-    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
-        if occupied_spaces is None:
-            occupied_spaces = globals()["occupied_spaces"]
-        if occupied_colour is None:
-            occupied_colour = globals()["occupied_colour"]
-        if not super().legal_move(destination, occupied_colour=occupied_colour):
+    def legal_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None) -> bool:
+        if target_occupied_spaces is None:
+            target_occupied_spaces = occupied_spaces
+        if target_occupied_colour is None:
+            target_occupied_colour = occupied_colour
+        if not super().legal_move(destination, target_occupied_colour=target_occupied_colour):
             return False
         if not game_mode:
             return True
@@ -136,13 +135,13 @@ class Rook(Piece):
             for rank in range(self.rank, new_rank, +1 if self.rank < new_rank else -1):
                 if (new_file, rank) == (self.file, self.rank):
                     continue
-                if (new_file, rank) in occupied_spaces:
+                if (new_file, rank) in target_occupied_spaces:
                     return False
         else:
             for file in range(self.file, new_file, +1 if self.file < new_file else -1):
                 if (file, new_rank) == (self.file, self.rank):
                     continue
-                if (file, new_rank) in occupied_spaces:
+                if (file, new_rank) in target_occupied_spaces:
                     return False
         return True
 
@@ -155,12 +154,12 @@ class Knight(Piece):
         self.rect = self.image.get_rect(
             center=get_center_coordinates(self.rank, self.file))
 
-    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
-        if occupied_spaces is None:
-            occupied_spaces = globals()["occupied_spaces"]
-        if occupied_colour is None:
-            occupied_colour = globals()["occupied_colour"]
-        if not super().legal_move(destination, occupied_colour=occupied_colour):
+    def legal_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None) -> bool:
+        if target_occupied_spaces is None:
+            target_occupied_spaces = occupied_spaces
+        if target_occupied_colour is None:
+            target_occupied_colour = occupied_colour
+        if not super().legal_move(destination, target_occupied_colour=target_occupied_colour):
             return False
         if not game_mode:
             return True
@@ -180,12 +179,12 @@ class Bishop(Piece):
         self.rect = self.image.get_rect(
             center=get_center_coordinates(self.rank, self.file))
 
-    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
-        if occupied_spaces is None:
-            occupied_spaces = globals()["occupied_spaces"]
-        if occupied_colour is None:
-            occupied_colour = globals()["occupied_colour"]
-        if not super().legal_move(destination, occupied_colour=occupied_colour):
+    def legal_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None) -> bool:
+        if target_occupied_spaces is None:
+            target_occupied_spaces = occupied_spaces
+        if target_occupied_colour is None:
+            target_occupied_colour = occupied_colour
+        if not super().legal_move(destination, target_occupied_colour=target_occupied_colour):
             return False
         if not game_mode:
             return True
@@ -212,12 +211,12 @@ class Queen(Piece):
         self.rect = self.image.get_rect(
             center=get_center_coordinates(self.rank, self.file))
 
-    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
-        if occupied_spaces is None:
-            occupied_spaces = globals()["occupied_spaces"]
-        if occupied_colour is None:
-            occupied_colour = globals()["occupied_colour"]
-        if not super().legal_move(destination, occupied_colour=occupied_colour):
+    def legal_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None) -> bool:
+        if target_occupied_spaces is None:
+            target_occupied_spaces = occupied_spaces
+        if target_occupied_colour is None:
+            target_occupied_colour = occupied_colour
+        if not super().legal_move(destination, target_occupied_colour=target_occupied_colour):
             return False
         if not game_mode:
             return True
@@ -234,12 +233,12 @@ class King(Piece):
         self.rect = self.image.get_rect(
             center=get_center_coordinates(self.rank, self.file))
 
-    def legal_move(self, destination: tuple, occupied_spaces=None, occupied_colour=None) -> bool:
-        if occupied_spaces is None:
-            occupied_spaces = globals()["occupied_spaces"]
-        if occupied_colour is None:
-            occupied_colour = globals()["occupied_colour"]
-        if not super().legal_move(destination, occupied_colour=occupied_colour):
+    def legal_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None) -> bool:
+        if target_occupied_spaces is None:
+            target_occupied_spaces = occupied_spaces
+        if target_occupied_colour is None:
+            target_occupied_colour = occupied_colour
+        if not super().legal_move(destination, target_occupied_colour=target_occupied_colour):
             return False
         if not game_mode:
             return True
