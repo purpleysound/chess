@@ -11,20 +11,24 @@ pygame.scrap.init()
 BOARD = pygame.image.load("images/board.png")  # squares are 64px wide
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 BACKGROUND_COLOUR = (64, 64, 64)
-contrasting_colour = (
-    255-BACKGROUND_COLOUR[0], 255-BACKGROUND_COLOUR[1], 255-BACKGROUND_COLOUR[2])
+contrasting_colour = (255-BACKGROUND_COLOUR[0], 255-BACKGROUND_COLOUR[1], 255-BACKGROUND_COLOUR[2])
 FONT = pygame.font.SysFont("Segoe UI", 30)
 
 
 class Piece(pygame.sprite.Sprite):
-    def __init__(self, rank: int, file: int, colour):
+    def __init__(self, rank: int, file: int, colour, parent=None):
         self.rank = rank
         self.file = file
         self.colour = colour
         self.dragging = False
+        self.moved = False
+        if parent == None:
+            self._parent = pieces  # pointer with defaul parameter of main "pieces" list
+        else:
+            self._parent = parent
 
     def __repr__(self):
-        return f"{self.colour} {self.__class__.__name__} piece on rank {self.rank} on file {self.file}"
+        return f"{self.colour} {self.__class__.__name__} on rank {self.rank} on file {self.file}"
 
     def update_pos(self):
         global piece_held, mouse_down, occupied_spaces, occupied_colour
@@ -63,6 +67,7 @@ class Piece(pygame.sprite.Sprite):
                 else:
                     if piece.rank == self.rank and piece.file == self.file:
                         pieces.remove(piece)
+        self.moved = True
         return target_occupied_spaces, target_occupied_colour
 
     def legal_move(self, destination: tuple, target_occupied_colour=None) -> bool:
@@ -118,6 +123,8 @@ class Rook(Piece):
             "images/wR.svg" if self.colour == "White" else "images/bR.svg"), (64, 64))
         self.rect = self.image.get_rect(
             center=get_center_coordinates(self.rank, self.file))
+        self.kingside = True if (file, rank) == (8, (1 if colour == "White" else 8)) else False
+        self.queenside = True if (file, rank) == (1, (1 if colour == "White" else 8)) else False
 
     def legal_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None) -> bool:
         if target_occupied_spaces is None:
@@ -193,8 +200,7 @@ class Bishop(Piece):
         drank = new_rank - self.rank
         if abs(dfile) != abs(drank):
             return False
-        direction = tuple(map(lambda x: +1 if x else -1,
-                          (dfile > 0, drank > 0)))  # unit vector
+        direction = tuple(map(lambda x: +1 if x else -1,(dfile > 0, drank > 0)))  # unit vector
         for distance in range(abs(drank)):
             if distance == 0:
                 continue
@@ -232,6 +238,7 @@ class King(Piece):
             "images/wK.svg" if self.colour == "White" else "images/bK.svg"), (64, 64))
         self.rect = self.image.get_rect(
             center=get_center_coordinates(self.rank, self.file))
+        self.castling = None
 
     def legal_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None) -> bool:
         if target_occupied_spaces is None:
@@ -245,10 +252,49 @@ class King(Piece):
         new_file, new_rank = destination
         dfile = new_file - self.file
         drank = new_rank - self.rank
-        if dfile > 1 or drank > 1:
-            return False
-        # need to add castling
-        return True
+        if abs(dfile) <= 1 and abs(drank) <= 1:
+            return True
+
+        if abs(dfile) == 2 and drank == 0 and not self.moved:  # castling
+            kingside_rook = get_rook(self._parent, True, self.colour)
+            print(kingside_rook)
+            queenside_rook = get_rook(self._parent, False, self.colour)
+            print(queenside_rook)
+            if self.colour == "White":
+                if destination == (7, 1) and kingside_rook and not kingside_rook.moved:
+                    self.castling = "Kingside"
+                    return True
+                if destination == (3, 1) and queenside_rook and not queenside_rook.moved:
+                    self.castling = "Queenside"
+                    return True
+            else:
+                if destination == (7, 8) and kingside_rook and not kingside_rook.moved:
+                    self.castling = "Kingside"
+                    return True
+                if destination == (3, 8) and queenside_rook and not queenside_rook.moved:
+                    self.castling = "Queenside"
+                    return True
+
+        return False
+
+    def do_move(self, destination: tuple, target_occupied_spaces=None, target_occupied_colour=None):
+        #doesn't correctly edit the rook piece from self._parent list, need to figure that out
+        if self.castling == "Kingside":
+            kingside_rook = get_rook(self._parent, True, self.colour)
+            _index = self._parent.index(kingside_rook)
+            kingside_rook.moved = True
+            kingside_rook.file = 6
+            self._parent[_index].moved = True
+            self._parent[_index].file = 6
+        if self.castling == "Queenside":
+            queenside_rook = get_rook(self._parent, False, self.colour)
+            _index = self._parent.index(queenside_rook)
+            queenside_rook.moved = True
+            queenside_rook.file = 4
+            self._parent[_index].moved = True
+            self._parent[_index].file = 4
+        self.castling = None
+        return super().do_move(destination, target_occupied_spaces, target_occupied_colour)
 
 
 def update_display():
@@ -288,8 +334,10 @@ def FEN_to_pieces_list(FEN=DEFAULT_FEN):
             else:
                 gap_adjustment += int(piece) - 1
     occupied_spaces = set([(piece.file, piece.rank) for piece in pieces])
-    occupied_colour = defaultdict(
-        lambda: None, {(piece.file, piece.rank): piece.colour for piece in pieces})
+    occupied_colour = defaultdict(lambda: None, {(piece.file, piece.rank): piece.colour for piece in pieces})
+
+    for piece in pieces:
+        piece._parent = pieces
     return pieces
 
 
@@ -373,15 +421,25 @@ def get_legal_moves(pieces: list):
                 if piece.legal_move((file, rank)):
                     yield (piece, (file, rank))
 
+def get_rook(target_pieces: list[Piece], kingside: bool, colour: str) -> Rook:
+    """Linear search to return Rook Piece from a list, returns None if specified piece is not in list"""
+    for piece in target_pieces:
+        if type(piece) == Rook and piece.colour == colour:
+            print(f"{piece} piece found, kingside: {piece.kingside}, queenside: {piece.queenside}")
+            if (piece.kingside if kingside else piece.queenside):
+                return piece
+    return None
+
 
 letter_to_piece_dict = {"p": Pawn, "r": Rook,
                         "n": Knight, "b": Bishop, "q": Queen, "k": King}
 piece_to_letter_dict = {"Pawn": "p", "Rook": "r",
                         "Knight": "n", "Bishop": "b", "Queen": "q", "King": "k"}
+pieces = list()
 pieces = FEN_to_pieces_list()
 mouse_down = False
 piece_held = False
-game_mode = False
+game_mode = True
 
 if __name__ == "__main__":
     running = True
