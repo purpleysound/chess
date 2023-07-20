@@ -1,14 +1,11 @@
 import pygame
+from game import Game
 
-class Game:
-    def __init__(self):
-        pass
+BACKGROUND_COLOUR = (64, 64, 64)
+CONTRASTING_COLOUR = tuple(255 - colour for colour in BACKGROUND_COLOUR)
+BOARD_IMG = pygame.image.load("images/board.png")
 
-
-class User_Interface:
-    BACKGROUND_COLOUR = (64, 64, 64)
-    CONTRASTING_COLOUR = tuple(255 - colour for colour in BACKGROUND_COLOUR)
-    BOARD_IMG = pygame.image.load("images/board.png")
+class User_Interface: 
     def __init__(self):
         self.display = pygame.display.set_mode((800, 800))
         self.clock = pygame.time.Clock()
@@ -31,8 +28,8 @@ class User_Interface:
         pass
 
     def draw(self):
-        self.display.fill(self.BACKGROUND_COLOUR)
-        self.display.blit(self.BOARD_IMG, (0, 0))
+        self.display.fill(BACKGROUND_COLOUR)
+        self.display.blit(BOARD_IMG, (0, 0))
         pygame.display.update()
 
 
