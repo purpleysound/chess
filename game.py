@@ -14,11 +14,10 @@ class Game:
         self.white_move = w_or_b[fmove]
         self.en_passant_square: str = fEn_passant  # Might want to update this to tuple form in future
         self.castling_rights = ["K" in fcastling, "Q" in fcastling, "k" in fcastling, "q" in fcastling]
-        self.past_fens: list[str] = [self.get_fen()]
 
     def board_from_fen(self, fboard: str) -> list[list[int | None]]:
         board: list[list[int | None]] = []
-        for rank in fboard.split("/"):#
+        for rank in fboard.split("/"):
             row = []
             for file in rank:
                 if file in "12345678":
@@ -26,7 +25,6 @@ class Game:
                         row.append(None)
                 else:
                     white = file.isupper()
-                    pos = (len(row) + 1, 8 - len(board))
                     row.append(piece.generate_piece(letter_to_class[file.lower()], white))
             board.append(row)
 
@@ -38,3 +36,19 @@ class Game:
         """return fen string of current game state"""
         return DEFAULT_FEN  # Implement later
     
+    def legal_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
+        return True  # Implement later
+    
+    def make_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]):
+        """make a move in algebraic notation"""
+        start_index, start_jndex = pos_to_indices(start_pos)
+        end_index, end_jndex = pos_to_indices(end_pos)
+        start_piece = self.board[start_index][start_jndex]
+        assert start_piece is not None
+        start_piece = piece.update_moved_bit(start_piece)
+        self.board[start_index][start_jndex] = None
+        self.board[end_index][end_jndex] = start_piece
+        self.half_moves_count += 1
+        if not self.white_move:
+            self.full_moves_count += 1
+        self.white_move = not self.white_move

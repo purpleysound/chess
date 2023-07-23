@@ -37,11 +37,12 @@ class User_Interface:
         for i, rank in enumerate(self.game.board):
             for j, item in enumerate(rank):
                 if item is not None:
-                    pos = indices_to_coords(i, j)
+                    pos = indices_to_pos(i, j)
                     self.pieces[-1].append(DisplayPiece(item, pos_to_pygame_coordinates(pos)))
                 else:
                     self.pieces[-1].append(None)
             self.pieces.append([])
+        self.pieces.pop()
 
 
     def run(self):
@@ -61,7 +62,21 @@ class User_Interface:
         for rank in self.pieces:
             for item in rank:
                 if item is not None:
-                    item.update(event)
+                    return_value = item.update(event)
+                    self.handle_piece_update_return_value(item, return_value)
+
+    def handle_piece_update_return_value(self, piece: "DisplayPiece", return_value: tuple[int, int] | None):
+        if return_value is None:
+            return
+        start_pos = pygame_coordinates_to_pos(piece.start_coords)
+        if self.game.legal_move(start_pos, return_value):
+            self.game.make_move(start_pos, return_value)
+            start_index, start_jndex = pos_to_indices(start_pos)
+            end_index, end_jndex = pos_to_indices(return_value)
+            self.pieces[end_index][end_jndex] = piece
+            self.pieces[start_index][start_jndex] = None
+            piece.rect.topleft = pos_to_pygame_coordinates(return_value)
+            piece.start_coords = piece.rect.topleft
 
     def draw(self):
         self.display.fill(BACKGROUND_COLOUR)
@@ -70,6 +85,11 @@ class User_Interface:
             for item in rank:
                 if item is not None:
                     self.display.blit(item.image, item.rect)
+        for rank in self.pieces:
+            for item in rank:
+                if item is not None and item.held:
+                    item.draw(self.display)
+                    continue
         pygame.display.update()
 
 
@@ -80,6 +100,7 @@ class DisplayPiece(pygame.sprite.Sprite):
         self.image: pygame.surface.Surface = self.get_image()
         self.rect: pygame.rect.Rect = self.image.get_rect(topleft=coords)
         self.held = False
+        self.start_coords = coords
 
     def get_image(self) -> pygame.surface.Surface:
         piece_type, white, _  = piece.get_piece_attrs(self.piece)
@@ -88,15 +109,19 @@ class DisplayPiece(pygame.sprite.Sprite):
     def draw(self, display: pygame.surface.Surface):
         display.blit(self.image, self.rect) # type: ignore (pygame types are silly)
 
-    def update(self, event: pygame.event.Event):
+    def update(self, event: pygame.event.Event) -> tuple[int, int] | None:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 self.held = True
-        elif event.type == pygame.MOUSEBUTTONUP:
+                self.start_coords = self.rect.topleft
+        elif event.type == pygame.MOUSEBUTTONUP and self.held:
             self.held = False
-        elif event.type == pygame.MOUSEMOTION:
-            if self.held:
-                self.rect.center = event.pos
+            end_pos = pygame_coordinates_to_pos(event.pos)
+            if any(i not in range(1, 9) for i in end_pos):
+                return None
+            return end_pos
+        elif event.type == pygame.MOUSEMOTION and self.held:
+            self.rect.center = event.pos
 
 
 def pos_to_pygame_coordinates(tup: tuple) -> tuple[int, int]:
