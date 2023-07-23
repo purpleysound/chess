@@ -60,6 +60,8 @@ class User_Interface:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_f:
                     print(self.game.get_fen())
+                if event.key == pygame.K_l:
+                    print(self.game.get_legal_moves())
     
     def update(self, event: pygame.event.Event):
         for rank in self.pieces:
