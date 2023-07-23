@@ -118,6 +118,7 @@ class DisplayPiece(pygame.sprite.Sprite):
             self.held = False
             end_pos = pygame_coordinates_to_pos(event.pos)
             if any(i not in range(1, 9) for i in end_pos):
+                self.rect.topleft = self.start_coords
                 return None
             return end_pos
         elif event.type == pygame.MOUSEMOTION and self.held:
