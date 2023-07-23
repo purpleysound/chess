@@ -4,6 +4,7 @@ from utils_and_constants import *
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 w_or_b = {"w": True, "b": False}
 letter_to_class = {"p": piece.PAWN, "n": piece.KNIGHT, "b": piece.BISHOP, "r": piece.ROOK, "q": piece.QUEEN, "k": piece.KING}
+piece_to_letter = {piece.PAWN: "p", piece.KNIGHT: "n", piece.BISHOP: "b", piece.ROOK: "r", piece.QUEEN: "q", piece.KING: "k"}
 
 class Game:
     def __init__(self, fen: str = DEFAULT_FEN):
@@ -12,7 +13,7 @@ class Game:
         self.half_moves_count = int(fhalf_move)
         self.full_moves_count = int(ffull_move)
         self.white_move = w_or_b[fmove]
-        self.en_passant_square: str = fEn_passant  # Might want to update this to tuple form in future
+        self.en_passant_square: tuple[int, int] | None = notation_to_pos(fEn_passant) if fEn_passant != "-" else None
         self.castling_rights = ["K" in fcastling, "Q" in fcastling, "k" in fcastling, "q" in fcastling]
 
     def board_from_fen(self, fboard: str) -> list[list[int | None]]:
@@ -34,7 +35,50 @@ class Game:
     
     def get_fen(self) -> str:
         """return fen string of current game state"""
-        return DEFAULT_FEN  # Implement later
+        fen = ""
+        blank_count = 0
+        for rank in self.board[::-1]:
+            for item in rank:
+                if item is None:
+                    blank_count += 1
+                else:
+                    if blank_count > 0:
+                        fen += str(blank_count)
+                        blank_count = 0
+                    piece_type, white, moved = piece.get_piece_attrs(item)
+                    fen += piece_to_letter[piece_type].upper() if white else piece_to_letter[piece_type]
+            if blank_count > 0:
+                fen += str(blank_count)
+                blank_count = 0
+            fen += "/"
+        fen = fen[:-1]  # remove last slash
+        fen += " "
+        fen += "w" if self.white_move else "b"
+        fen += " "
+        castling = ""
+        if self.castling_rights[0]:
+            castling += "K"
+        if self.castling_rights[1]:
+            castling += "Q"
+        if self.castling_rights[2]:
+            castling += "k"
+        if self.castling_rights[3]:
+            castling += "q"
+        if castling == "":
+            castling = "-"
+        fen += castling
+        fen += " "
+        if self.en_passant_square:
+            fen += pos_to_notation(self.en_passant_square)
+        else:
+            fen += "-"
+        fen += " "
+        fen += str(self.half_moves_count)
+        fen += " "
+        fen += str(self.full_moves_count)
+        return fen
+
+
     
     def legal_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
         return True  # Implement later

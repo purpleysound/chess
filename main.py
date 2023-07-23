@@ -57,6 +57,9 @@ class User_Interface:
                 self.running = False
             if event.type in MOUSE_ACTIONS:
                 self.update(event)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_f:
+                    print(self.game.get_fen())
     
     def update(self, event: pygame.event.Event):
         for rank in self.pieces:
