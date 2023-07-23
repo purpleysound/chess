@@ -77,11 +77,9 @@ class Game:
         fen += " "
         fen += str(self.full_moves_count)
         return fen
-
-
-    
+ 
     def legal_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
-        return True  # Implement later
+        return start_pos != end_pos
     
     def make_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]):
         """make a move in algebraic notation"""

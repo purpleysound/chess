@@ -80,6 +80,8 @@ class User_Interface:
             self.pieces[start_index][start_jndex] = None
             piece.rect.topleft = pos_to_pygame_coordinates(return_value)
             piece.start_coords = piece.rect.topleft
+        else:
+            piece.rect.topleft = piece.start_coords
 
     def draw(self):
         self.display.fill(BACKGROUND_COLOUR)
