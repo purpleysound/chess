@@ -1,25 +1,26 @@
 import pygame
 from game import Game
+import piece
 from utils_and_constants import *
 
 BACKGROUND_COLOUR = (64, 64, 64)
 CONTRASTING_COLOUR = tuple(255 - colour for colour in BACKGROUND_COLOUR)
 BOARD_IMG = pygame.image.load("images/board.png")
 white_class_name_to_img = {
-    "Pawn": pygame.transform.smoothscale(pygame.image.load("images/wP.svg"), (64, 64)),
-    "Knight": pygame.transform.smoothscale(pygame.image.load("images/wN.svg"), (64, 64)),
-    "Bishop": pygame.transform.smoothscale(pygame.image.load("images/wB.svg"), (64, 64)),
-    "Rook": pygame.transform.smoothscale(pygame.image.load("images/wR.svg"), (64, 64)),
-    "Queen": pygame.transform.smoothscale(pygame.image.load("images/wQ.svg"), (64, 64)),
-    "King": pygame.transform.smoothscale(pygame.image.load("images/wK.svg"), (64, 64)),
+    piece.PAWN: pygame.transform.smoothscale(pygame.image.load("images/wP.svg"), (64, 64)),
+    piece.KNIGHT: pygame.transform.smoothscale(pygame.image.load("images/wN.svg"), (64, 64)),
+    piece.BISHOP: pygame.transform.smoothscale(pygame.image.load("images/wB.svg"), (64, 64)),
+    piece.ROOK: pygame.transform.smoothscale(pygame.image.load("images/wR.svg"), (64, 64)),
+    piece.QUEEN: pygame.transform.smoothscale(pygame.image.load("images/wQ.svg"), (64, 64)),
+    piece.KING: pygame.transform.smoothscale(pygame.image.load("images/wK.svg"), (64, 64)),
 }
 black_class_name_to_img = {
-    "Pawn": pygame.transform.smoothscale(pygame.image.load("images/bP.svg"), (64, 64)),
-    "Knight": pygame.transform.smoothscale(pygame.image.load("images/bN.svg"), (64, 64)),
-    "Bishop": pygame.transform.smoothscale(pygame.image.load("images/bB.svg"), (64, 64)),
-    "Rook": pygame.transform.smoothscale(pygame.image.load("images/bR.svg"), (64, 64)),
-    "Queen": pygame.transform.smoothscale(pygame.image.load("images/bQ.svg"), (64, 64)),
-    "King": pygame.transform.smoothscale(pygame.image.load("images/bK.svg"), (64, 64)),
+    piece.PAWN: pygame.transform.smoothscale(pygame.image.load("images/bP.svg"), (64, 64)),
+    piece.KNIGHT: pygame.transform.smoothscale(pygame.image.load("images/bN.svg"), (64, 64)),
+    piece.BISHOP: pygame.transform.smoothscale(pygame.image.load("images/bB.svg"), (64, 64)),
+    piece.ROOK: pygame.transform.smoothscale(pygame.image.load("images/bR.svg"), (64, 64)),
+    piece.QUEEN: pygame.transform.smoothscale(pygame.image.load("images/bQ.svg"), (64, 64)),
+    piece.KING: pygame.transform.smoothscale(pygame.image.load("images/bK.svg"), (64, 64)),
 }
 colour_to_img = {True: white_class_name_to_img, False: black_class_name_to_img}
 
@@ -49,14 +50,16 @@ class User_Interface:
     def draw(self):
         self.display.fill(BACKGROUND_COLOUR)
         self.display.blit(BOARD_IMG, (0, 0))
-        for rank in self.game.board:
-            for piece in rank:
-                if piece is not None:
-                    self.display.blit(colour_to_img[piece.white][piece.__class__.__name__], self.tuple_to_coordinates(piece.position))
+        for i, rank in enumerate(self.game.board):
+            for j, item in enumerate(rank):
+                if item is not None:
+                    piece_type, white, _  = piece.get_piece_attrs(item)
+                    pos = indices_to_coords(i, j)
+                    self.display.blit(colour_to_img[white][piece_type], self.pos_to_pygame_coordinates(pos))
         pygame.display.update()
 
     @staticmethod
-    def tuple_to_coordinates(tup: tuple) -> tuple[int, int]:
+    def pos_to_pygame_coordinates(tup: tuple) -> tuple[int, int]:
         # each square is 64x64, top_left is (0, 0)
         return int((tup[0] - 1) * 64), int((8 - tup[1]) * 64)
 
