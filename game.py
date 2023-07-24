@@ -201,7 +201,7 @@ class Game:
     def get_queen_moves(self, start_pos: tuple[int, int]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
         return self.get_bishop_moves(start_pos) + self.get_rook_moves(start_pos)
     
-    def make_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]):
+    def make_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int], promotion_piece: int = piece.QUEEN):
         """make a move in algebraic notation"""
         start_index, start_jndex = pos_to_indices(start_pos)
         end_index, end_jndex = pos_to_indices(end_pos)
@@ -222,6 +222,8 @@ class Game:
         self.en_passant_square = None
         if piece_type == piece.PAWN and abs(start_pos[1] - end_pos[1]) == 2:
             self.en_passant_square = vector_add(start_pos, (0, 1 if piece_white else -1))
+        if piece_type == piece.PAWN and (end_pos[1] == 1 or end_pos[1] == 8):
+            self.board[end_index][end_jndex] = piece.generate_piece(promotion_piece, piece_white, True)
 
 
 PIECEWISE_LEGAL_MOVES = {
