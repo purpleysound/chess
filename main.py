@@ -2,6 +2,7 @@ import pygame
 from game import Game, PIECEWISE_LEGAL_MOVES
 import piece
 from utils_and_constants import *
+from openings import opening_explorer
 
 BACKGROUND_COLOUR = (64, 64, 64)
 CONTRASTING_COLOUR = tuple(255 - colour for colour in BACKGROUND_COLOUR)
@@ -26,7 +27,7 @@ black_class_name_to_img = {
     piece.KING: pygame.transform.smoothscale(pygame.image.load("images/bK.svg"), (64, 64)),
 }
 colour_to_img = {True: white_class_name_to_img, False: black_class_name_to_img}
-CONSTANT_UI_TEXT = ["Press 'F' to print the FEN string", "Press 'L' to print the legal moves", "Click and drag to move pieces"]
+CONSTANT_UI_TEXT = ["Press 'F' to print the FEN string", "Press 'L' to print the legal moves", "Press 'O' to open the opening explorer"]
 
 class User_Interface: 
     def __init__(self):
@@ -67,6 +68,11 @@ class User_Interface:
                     print(self.game.get_fen())
                 if event.key == pygame.K_l:
                     print(self.game.get_legal_moves())
+                if event.key == pygame.K_o:
+                    fen = opening_explorer.open_window()
+                    if fen is not None:
+                        self.game = Game(fen)
+                        self.pieces = self.generate_display_pieces()
     
     def update(self, event: pygame.event.Event):
         for rank in self.pieces:
