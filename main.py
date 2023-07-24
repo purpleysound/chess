@@ -50,7 +50,6 @@ class User_Interface:
         pieces.pop()
         return pieces
 
-
     def run(self):
         while self.running:
             self.clock.tick(60)
@@ -82,14 +81,19 @@ class User_Interface:
                     self.handle_piece_update_return_value(item, return_value)
 
     def handle_piece_update_return_value(self, piece: "DisplayPiece", return_value: tuple[int, int] | None):
+        """Returns the piece to its original position if the move is illegal, otherwise makes the move
+        return_value is the end position of the piece, or None if the piece was not moved"""
         if return_value is None:
             return
         start_pos = pygame_coordinates_to_pos(piece.start_coords)
         if self.game.legal_move(start_pos, return_value):
-            self.game.make_move(start_pos, return_value)
-            self.pieces = self.generate_display_pieces()
+            self.make_move(start_pos, return_value)
         else:
             piece.rect.topleft = piece.start_coords
+
+    def make_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]):
+        self.game.make_move(start_pos, end_pos)
+        self.pieces = self.generate_display_pieces()
 
     def draw(self):
         self.display.fill(BACKGROUND_COLOUR)
