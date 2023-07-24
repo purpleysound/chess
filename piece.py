@@ -20,5 +20,14 @@ def get_piece_attrs(piece: int) -> tuple[int, bool, bool]:
     """return piece, white, moved"""
     return piece & 0b00111, bool(piece & 0b01000), bool(piece & 0b10000)
 
+def get_piece_type(piece: int) -> int:
+    return piece & 0b00111
+
+def get_piece_colour(piece: int) -> bool:
+    return bool(piece & 0b01000)
+
+def get_piece_moved(piece: int) -> bool:
+    return bool(piece & 0b10000)
+
 def update_moved_bit(piece: int) -> int:
     return piece | MOVED

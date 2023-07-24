@@ -125,7 +125,7 @@ class Game:
             if 0 <= i < 8 and 0 <= j < 8:
                 side_piece = self.board[i][j]
                 if side_piece is not None:
-                    side_piece_type, side_white, side_moved = piece.get_piece_attrs(side_piece)
+                    side_white = piece.get_piece_colour(side_piece)
                     if side_white != white:
                         legal_moves.append((start_pos, side_pos))
                 elif side_pos == self.en_passant_square:
@@ -143,7 +143,7 @@ class Game:
                 if end_piece is None:
                     legal_moves.append((start_pos, end_pos))
                 else:
-                    end_piece_type, end_white, end_moved = piece.get_piece_attrs(end_piece)
+                    end_white = piece.get_piece_colour(end_piece)
                     if end_white != self.white_move:
                         legal_moves.append((start_pos, end_pos))
         return legal_moves
@@ -159,7 +159,7 @@ class Game:
                 if end_piece is None:
                     legal_moves.append((start_pos, end_pos))
                 else:
-                    end_piece_type, end_white, end_moved = piece.get_piece_attrs(end_piece)
+                    end_white = piece.get_piece_colour(end_piece)
                     if end_white != self.white_move:
                         legal_moves.append((start_pos, end_pos))
         return legal_moves
@@ -177,7 +177,7 @@ class Game:
                     if end_piece is None:
                         legal_moves.append((start_pos, current_pos))
                     else:
-                        end_piece_type, end_white, end_moved = piece.get_piece_attrs(end_piece)
+                        end_white = piece.get_piece_colour(end_piece)
                         if end_white != self.white_move:
                             legal_moves.append((start_pos, current_pos))
                         break
@@ -198,7 +198,7 @@ class Game:
                     if end_piece is None:
                         legal_moves.append((start_pos, current_pos))
                     else:
-                        end_piece_type, end_white, end_moved = piece.get_piece_attrs(end_piece)
+                        end_white = piece.get_piece_colour(end_piece)
                         if end_white != self.white_move:
                             legal_moves.append((start_pos, current_pos))
                         break
