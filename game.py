@@ -83,14 +83,6 @@ class Game:
     
     def get_legal_moves(self) -> list[tuple[tuple[int, int], tuple[int, int]]]:
         """return list of legal moves in (start_pos, end_pos) format"""
-        piecewise_legal_moves = {
-            piece.PAWN: self.get_pawn_moves,
-            piece.KNIGHT: self.get_knight_moves,
-            piece.BISHOP: self.get_bishop_moves,
-            piece.ROOK: self.get_rook_moves,
-            piece.QUEEN: self.get_queen_moves,
-            piece.KING: self.get_king_moves,
-        }
         legal_moves = []
         for i, rank in enumerate(self.board):
             for j, item in enumerate(rank):
@@ -99,7 +91,7 @@ class Game:
                     if white != self.white_move:
                         continue
                     start_pos = indices_to_pos(i, j)
-                    legal_moves += piecewise_legal_moves[piece_type](start_pos)
+                    legal_moves += PIECEWISE_LEGAL_MOVES[piece_type](self, start_pos)
         return legal_moves
     
     def get_pawn_moves(self, start_pos: tuple[int, int]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
@@ -222,3 +214,12 @@ class Game:
         if not self.white_move:
             self.full_moves_count += 1
         self.white_move = not self.white_move
+
+PIECEWISE_LEGAL_MOVES = {
+    piece.PAWN: Game.get_pawn_moves,
+    piece.KNIGHT: Game.get_knight_moves,
+    piece.BISHOP: Game.get_bishop_moves,
+    piece.ROOK: Game.get_rook_moves,
+    piece.QUEEN: Game.get_queen_moves,
+    piece.KING: Game.get_king_moves,
+}

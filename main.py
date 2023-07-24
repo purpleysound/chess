@@ -1,10 +1,11 @@
 import pygame
-from game import Game
+from game import Game, PIECEWISE_LEGAL_MOVES
 import piece
 from utils_and_constants import *
 
 BACKGROUND_COLOUR = (64, 64, 64)
 CONTRASTING_COLOUR = tuple(255 - colour for colour in BACKGROUND_COLOUR)
+MOVE_INDICATOR_COLOUR = (32, 196, 32)
 BOARD_IMG = pygame.image.load("images/board.png")
 MOUSE_ACTIONS = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
 
@@ -25,7 +26,7 @@ black_class_name_to_img = {
     piece.KING: pygame.transform.smoothscale(pygame.image.load("images/bK.svg"), (64, 64)),
 }
 colour_to_img = {True: white_class_name_to_img, False: black_class_name_to_img}
-
+CONSTANT_UI_TEXT = ["Press 'F' to print the FEN string", "Press 'L' to print the legal moves", "Click and drag to move pieces"]
 
 class User_Interface: 
     def __init__(self):
@@ -66,7 +67,7 @@ class User_Interface:
     def update(self, event: pygame.event.Event):
         for rank in self.pieces:
             for item in rank:
-                if item is not None:
+                if item is not None and piece.get_piece_colour(item.piece) == self.game.white_move:
                     return_value = item.update(event)
                     self.handle_piece_update_return_value(item, return_value)
 
@@ -95,9 +96,19 @@ class User_Interface:
         for rank in self.pieces:
             for item in rank:
                 if item is not None and item.held:
+                    piece_type = piece.get_piece_type(item.piece)
+                    for start_pos, end_pos in PIECEWISE_LEGAL_MOVES[piece_type](self.game, pygame_coordinates_to_pos(item.start_coords)):
+                        pygame.draw.circle(self.display, MOVE_INDICATOR_COLOUR, vector_add(pos_to_pygame_coordinates(end_pos), (32, 32)), 8)
                     item.draw(self.display)
                     continue
+        for i, text in enumerate(self.get_display_text()):
+            self.display.blit(pygame.font.SysFont("Segoe UI", 32).render(text, True, CONTRASTING_COLOUR), (0, 512 + i * 32))
         pygame.display.update()
+
+    def get_display_text(self) -> list[str]:
+        display_text = CONSTANT_UI_TEXT.copy()
+        display_text.append(f"{'White' if self.game.white_move else 'Black'}'s turn")
+        return display_text
 
 
 class DisplayPiece(pygame.sprite.Sprite):
