@@ -70,7 +70,7 @@ class User_Interface:
                     print(self.game.get_legal_moves())
                 if event.key == pygame.K_o:
                     fen = opening_explorer.open_window()
-                    if fen is not None:
+                    if fen is not None and fen != "":
                         self.game = Game(fen)
                         self.pieces = self.generate_display_pieces()
     
