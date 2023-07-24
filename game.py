@@ -8,13 +8,21 @@ piece_to_letter = {piece.PAWN: "p", piece.KNIGHT: "n", piece.BISHOP: "b", piece.
 
 class Game:
     def __init__(self, fen: str = DEFAULT_FEN):
-        fboard, fmove, fcastling, fEn_passant, fhalf_move, ffull_move = fen.split(" ")
-        self.board: list[list[int | None]] = self.board_from_fen(fboard)  # starts in bottom left in rows, going up
-        self.half_moves_count = int(fhalf_move)
-        self.full_moves_count = int(ffull_move)
-        self.white_move = w_or_b[fmove]
-        self.en_passant_square: tuple[int, int] | None = notation_to_pos(fEn_passant) if fEn_passant != "-" else None
-        self.castling_rights = ["K" in fcastling, "Q" in fcastling, "k" in fcastling, "q" in fcastling]
+        self.en_passant_square = None
+        self.half_moves_count = 0
+        self.full_moves_count = 1  # in case fen doesn't have these, this might not be accurate but should affect anything too much
+        try:
+            fen_list = fen.split(" ")
+            self.board: list[list[int | None]] = self.board_from_fen(fen_list.pop(0))  # starts in bottom left in rows, going up
+            self.white_move = w_or_b[fen_list.pop(0)]
+            fcastling = fen_list.pop(0)
+            self.castling_rights = ["K" in fcastling, "Q" in fcastling, "k" in fcastling, "q" in fcastling]
+            fEn_passant = fen_list.pop(0)
+            self.en_passant_square: tuple[int, int] | None = notation_to_pos(fEn_passant) if fEn_passant != "-" else None
+            self.half_moves_count = int(fen_list.pop(0))
+            self.full_moves_count = int(fen_list.pop(0))
+        except IndexError:
+            pass
 
     def board_from_fen(self, fboard: str) -> list[list[int | None]]:
         board: list[list[int | None]] = []
@@ -284,7 +292,6 @@ class Game:
                 rook = piece.update_moved_bit(rook)
                 self.board[rook_start_i][rook_start_j] = None
                 self.board[rook_end_i][rook_end_j] = rook
-
 
 
 PIECEWISE_LEGAL_MOVES = {
