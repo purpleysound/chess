@@ -79,7 +79,12 @@ class Game:
         return fen
  
     def legal_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
-        return (start_pos, end_pos) in self.get_legal_moves()
+        i, j = pos_to_indices(start_pos)
+        start_piece = self.board[i][j]
+        assert start_piece is not None
+        piece_type = piece.get_piece_type(start_piece)
+        legal_moves = PIECEWISE_LEGAL_MOVES[piece_type](self, start_pos)
+        return (start_pos, end_pos) in legal_moves
     
     def get_legal_moves(self) -> list[tuple[tuple[int, int], tuple[int, int]]]:
         """return list of legal moves in (start_pos, end_pos) format"""
