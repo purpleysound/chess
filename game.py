@@ -214,6 +214,15 @@ class Game:
         if not self.white_move:
             self.full_moves_count += 1
         self.white_move = not self.white_move
+        piece_type, piece_white, piece_moved = piece.get_piece_attrs(start_piece)
+        if piece_type == piece.PAWN and end_pos == self.en_passant_square:
+            pawn_to_take_pos = end_pos[0], start_pos[1]
+            i, j = pos_to_indices(pawn_to_take_pos)
+            self.board[i][j] = None
+        self.en_passant_square = None
+        if piece_type == piece.PAWN and abs(start_pos[1] - end_pos[1]) == 2:
+            self.en_passant_square = vector_add(start_pos, (0, 1 if piece_white else -1))
+
 
 PIECEWISE_LEGAL_MOVES = {
     piece.PAWN: Game.get_pawn_moves,

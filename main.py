@@ -34,16 +34,20 @@ class User_Interface:
         self.clock = pygame.time.Clock()
         self.running = True
         self.game = Game()
-        self.pieces: list[list[DisplayPiece | None]] = [[]]
+        self.pieces: list[list[DisplayPiece | None]] = self.generate_display_pieces()
+
+    def generate_display_pieces(self):
+        pieces: list[list[DisplayPiece | None]] = [[]]
         for i, rank in enumerate(self.game.board):
             for j, item in enumerate(rank):
                 if item is not None:
                     pos = indices_to_pos(i, j)
-                    self.pieces[-1].append(DisplayPiece(item, pos_to_pygame_coordinates(pos)))
+                    pieces[-1].append(DisplayPiece(item, pos_to_pygame_coordinates(pos)))
                 else:
-                    self.pieces[-1].append(None)
-            self.pieces.append([])
-        self.pieces.pop()
+                    pieces[-1].append(None)
+            pieces.append([])
+        pieces.pop()
+        return pieces
 
 
     def run(self):
@@ -77,12 +81,7 @@ class User_Interface:
         start_pos = pygame_coordinates_to_pos(piece.start_coords)
         if self.game.legal_move(start_pos, return_value):
             self.game.make_move(start_pos, return_value)
-            start_index, start_jndex = pos_to_indices(start_pos)
-            end_index, end_jndex = pos_to_indices(return_value)
-            self.pieces[end_index][end_jndex] = piece
-            self.pieces[start_index][start_jndex] = None
-            piece.rect.topleft = pos_to_pygame_coordinates(return_value)
-            piece.start_coords = piece.rect.topleft
+            self.pieces = self.generate_display_pieces()
         else:
             piece.rect.topleft = piece.start_coords
 
