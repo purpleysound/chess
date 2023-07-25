@@ -24,6 +24,16 @@ class Game:
         except IndexError:
             pass
 
+    def copy(self) -> 'Game':
+        copy = Game()
+        copy.board = [rank[:] for rank in self.board]
+        copy.white_move = self.white_move
+        copy.castling_rights = self.castling_rights[:]
+        copy.en_passant_square = self.en_passant_square
+        copy.half_moves_count = self.half_moves_count
+        copy.full_moves_count = self.full_moves_count
+        return copy
+
     def board_from_fen(self, fboard: str) -> list[list[int | None]]:
         board: list[list[int | None]] = []
         for rank in fboard.split("/"):
@@ -39,8 +49,7 @@ class Game:
 
         board = board[::-1]  # fens go top down, we want bottom up
         return board
-                    
-    
+                       
     def get_fen(self) -> str:
         """return fen string of current game state"""
         fen = ""
@@ -106,6 +115,51 @@ class Game:
                     start_pos = indices_to_pos(i, j)
                     legal_moves += PIECEWISE_LEGAL_MOVES[piece_type](self, start_pos)
         return legal_moves
+    
+    def not_in_check_after_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
+        game_copy = self.copy()
+        game_copy.make_move(start_pos, end_pos)
+        for move in game_copy.get_legal_moves():
+            i, j = pos_to_indices(move[1])
+            response_destination = game_copy.board[i][j]
+            if response_destination is not None:
+                piece_type = piece.get_piece_type(response_destination)
+                if piece_type == piece.KING:
+                    return False
+        return True
+    
+    def get_legal_moves_with_check_check(self) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+        legal_moves = []
+        for move in self.get_legal_moves():
+            if self.not_in_check_after_move(*move):
+                legal_moves.append(move)
+        return legal_moves
+    
+    def legal_moves_from_start_pos(self, start_pos: tuple[int, int]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+        i, j = pos_to_indices(start_pos)
+        start_piece = self.board[i][j]
+        assert start_piece is not None
+        piece_type = piece.get_piece_type(start_piece)
+        legal_moves = PIECEWISE_LEGAL_MOVES[piece_type](self, start_pos)
+        return legal_moves
+        
+    def legal_moves_from_start_pos_with_check_check(self, start_pos: tuple[int, int]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+        legal_moves = self.legal_moves_from_start_pos(start_pos)
+        for move in legal_moves[:]:  # Need to use copy as items might be removed from list
+            if not self.not_in_check_after_move(*move):
+                legal_moves.remove(move)
+        return legal_moves
+    
+    def legal_move_with_check_check(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
+        i, j = pos_to_indices(start_pos)
+        start_piece = self.board[i][j]
+        assert start_piece is not None
+        piece_type = piece.get_piece_type(start_piece)
+        legal_moves = PIECEWISE_LEGAL_MOVES[piece_type](self, start_pos)
+        for move in legal_moves[:]:  # Need to use copy as items might be removed from list
+            if not self.not_in_check_after_move(*move):
+                legal_moves.remove(move)
+        return (start_pos, end_pos) in legal_moves
     
     def get_pawn_moves(self, start_pos: tuple[int, int]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
         legal_moves = []
@@ -186,6 +240,8 @@ class Game:
         return legal_moves
     
     def check_castling(self, start_pos, rook_pos, in_between_posses) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+        """The arguments of this function are kind of weird but i just had too many repeated nested for loops with the arguments
+        in the get_king_moves function so i think it makes the most sense here"""
         legal_moves = []
         rook_idx, rook_jdx = pos_to_indices(rook_pos)
         rook = self.board[rook_idx][rook_jdx]
@@ -196,7 +252,11 @@ class Game:
             in_between_pieces = [self.board[i][j] for i, j in in_between_indices]
             if all(piece is None for piece in in_between_pieces):
                 direction = 1 if rook_pos[0] > start_pos[0] else -1
-                legal_moves.append((start_pos, vector_add(start_pos, (2*direction, 0))))
+                if self.not_in_check_after_move(start_pos, vector_add(start_pos, (direction, 0))) and self.not_in_check_after_move(start_pos, start_pos):
+                    """This is an odd idea because this is the only time we check if we are in check in the non-check_check functions
+                    however, since you can't castle through check it is actually necessary here rather than in the rest of the cases
+                    where we are only checking it for the user in seperate functions and leaving 'pseudo-legal' moves for the engine to use"""
+                    legal_moves.append((start_pos, vector_add(start_pos, (2*direction, 0))))
         return legal_moves  
         
     def get_bishop_moves(self, start_pos: tuple[int, int]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
@@ -245,7 +305,6 @@ class Game:
         return self.get_bishop_moves(start_pos) + self.get_rook_moves(start_pos)
     
     def make_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int], promotion_piece: int = piece.QUEEN):
-        """make a move in algebraic notation"""
         start_index, start_jndex = pos_to_indices(start_pos)
         end_index, end_jndex = pos_to_indices(end_pos)
         start_piece = self.board[start_index][start_jndex]

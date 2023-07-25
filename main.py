@@ -80,13 +80,13 @@ class User_Interface:
                     return_value = item.update(event)
                     self.handle_piece_update_return_value(item, return_value)
 
-    def handle_piece_update_return_value(self, piece: "DisplayPiece", return_value: tuple[int, int] | None):
+    def handle_piece_update_return_value(self, piece: 'DisplayPiece', return_value: tuple[int, int] | None):
         """Returns the piece to its original position if the move is illegal, otherwise makes the move
         return_value is the end position of the piece, or None if the piece was not moved"""
         if return_value is None:
             return
         start_pos = pygame_coordinates_to_pos(piece.start_coords)
-        if self.game.legal_move(start_pos, return_value):
+        if self.game.legal_move_with_check_check(start_pos, return_value):
             self.make_move(start_pos, return_value)
         else:
             piece.rect.topleft = piece.start_coords
@@ -105,8 +105,7 @@ class User_Interface:
         for rank in self.pieces:
             for item in rank:
                 if item is not None and item.held:
-                    piece_type = piece.get_piece_type(item.piece)
-                    for start_pos, end_pos in PIECEWISE_LEGAL_MOVES[piece_type](self.game, pygame_coordinates_to_pos(item.start_coords)):
+                    for start_pos, end_pos in self.game.legal_moves_from_start_pos_with_check_check(pygame_coordinates_to_pos(item.start_coords)):
                         pygame.draw.circle(self.display, MOVE_INDICATOR_COLOUR, vector_add(pos_to_pygame_coordinates(end_pos), (32, 32)), 8)
                     item.draw(self.display)
                     continue
