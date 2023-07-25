@@ -3,6 +3,7 @@ from game import Game, PIECEWISE_LEGAL_MOVES
 import piece
 from utils_and_constants import *
 from openings import opening_explorer
+import engine
 
 BACKGROUND_COLOUR = (64, 64, 64)
 CONTRASTING_COLOUR = tuple(255 - colour for colour in BACKGROUND_COLOUR)
@@ -72,6 +73,8 @@ class User_Interface:
                     if fen is not None and fen != "":
                         self.game = Game(fen)
                         self.pieces = self.generate_display_pieces()
+                if event.key == pygame.K_m:
+                    print(engine.get_value_and_best_move(self.game, 3))
     
     def update(self, event: pygame.event.Event):
         for rank in self.pieces:

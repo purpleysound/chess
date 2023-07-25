@@ -34,6 +34,16 @@ class Game:
         copy.full_moves_count = self.full_moves_count
         return copy
     
+    def king_taken(self) -> bool:
+        count = 0
+        for rank in self.board:
+            for item in rank:
+                if item is not None:
+                    piece_type = piece.get_piece_type(item)
+                    if piece_type == piece.KING:
+                        count += 1
+        return count != 2       
+    
     def get_piece_from_pos(self, pos: tuple[int, int]) -> int | None:
         i, j = pos_to_indices(pos)
         return self.board[i][j]
