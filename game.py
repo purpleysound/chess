@@ -311,6 +311,8 @@ class Game:
         assert start_piece is not None
         start_piece = piece.update_moved_bit(start_piece)
         self.board[start_index][start_jndex] = None
+        if self.board[end_index][end_jndex] is not None:
+            self.half_moves_count = 0
         self.board[end_index][end_jndex] = start_piece
         self.half_moves_count += 1
         if not self.white_move:
@@ -324,11 +326,13 @@ class Game:
             self.board[i][j] = None
         self.en_passant_square = None
 
-        if piece_type == piece.PAWN and abs(start_pos[1] - end_pos[1]) == 2:
-            self.en_passant_square = vector_add(start_pos, (0, 1 if piece_white else -1))
+        if piece_type == piece.PAWN:
+            self.half_moves_count = 0
+            if abs(start_pos[1] - end_pos[1]) == 2:
+                self.en_passant_square = vector_add(start_pos, (0, 1 if piece_white else -1))
 
-        if piece_type == piece.PAWN and (end_pos[1] == 1 or end_pos[1] == 8):
-            self.board[end_index][end_jndex] = piece.generate_piece(promotion_piece, piece_white, True)
+            if (end_pos[1] == 1 or end_pos[1] == 8):
+                self.board[end_index][end_jndex] = piece.generate_piece(promotion_piece, piece_white, True)
 
         if piece_type == piece.KING and abs(start_pos[0] - end_pos[0]) == 2:
             if end_pos[0] == 7:
@@ -351,6 +355,23 @@ class Game:
                 rook = piece.update_moved_bit(rook)
                 self.board[rook_start_i][rook_start_j] = None
                 self.board[rook_end_i][rook_end_j] = rook
+
+        if piece_type == piece.KING:
+            if piece_white:
+                self.castling_rights[0] = False
+                self.castling_rights[1] = False
+            else:
+                self.castling_rights[2] = False
+                self.castling_rights[3] = False
+        if piece_type == piece.ROOK:
+            if start_pos == (8, 1):
+                self.castling_rights[0] = False
+            elif start_pos == (1, 1):
+                self.castling_rights[1] = False
+            elif start_pos == (8, 8):
+                self.castling_rights[2] = False
+            elif start_pos == (1, 8):
+                self.castling_rights[3] = False
 
 
 PIECEWISE_LEGAL_MOVES = {
