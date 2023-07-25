@@ -3,7 +3,7 @@ import piece
 import json
 import math
 
-with open("openings/opening_values.json", "r") as f:
+with open("openings/opening_values_d3.json", "r") as f:
     OPENING_VALUES = json.load(f)
 
 piece_values = {
@@ -136,8 +136,14 @@ def get_value_and_best_move(game: Game, depth: int) -> tuple[int, tuple[tuple[in
 # if __name__ == "__main__":
 #     from openings import opening_explorer
 #     import json
-#     opening_values = {}
-#     for fen in opening_explorer.FENs:
-#         opening_values[fen] = Engine(Game(fen)).base_evaluation()
-#     with open("openings/opening_values.json", "w") as f:
-#         json.dump(opening_values, f)
+#     import time
+#     d = 0
+#     while True:
+#         t0 = time.time()
+#         opening_values = {}
+#         for fen in opening_explorer.FENs:
+#             opening_values[fen] = get_value_and_best_move(Game(fen), d)[0]
+#         with open(f"openings/opening_values_d{str(d)}.json", "w") as f:
+#             json.dump(opening_values, f, indent=4)
+#         print(time.time() - t0)
+#         d += 1

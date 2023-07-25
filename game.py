@@ -182,7 +182,7 @@ class Game:
         i, j = pos_to_indices(ahead)
         if self.board[i][j] is None:
             legal_moves.append((start_pos, ahead))
-            if not moved:
+            if (white and start_pos[1] == 2) or (not white and start_pos[1] == 7):
                 ahead2 = vector_add(ahead, (0, direction))
                 i, j = pos_to_indices(ahead2)
                 if self.board[i][j] is None:
