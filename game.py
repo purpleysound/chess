@@ -332,10 +332,14 @@ class Game:
                 self.board[end_index][end_jndex] = piece.generate_piece(promotion_piece, piece_white, True)
 
         if piece_type == piece.KING and abs(start_pos[0] - end_pos[0]) == 2:
+            if piece_white:
+                rank = 1
+            else:
+                rank = 8
             if end_pos[0] == 7:
-                rook_start_pos = (8, 1)
+                rook_start_pos = (8, rank)
                 rook_start_i, rook_start_j = pos_to_indices(rook_start_pos)
-                rook_end_pos = (6, 1)
+                rook_end_pos = (6, rank)
                 rook_end_i, rook_end_j = pos_to_indices(rook_end_pos)
                 rook = self.board[rook_start_i][rook_start_j]
                 assert rook is not None
@@ -343,9 +347,9 @@ class Game:
                 self.board[rook_start_i][rook_start_j] = None
                 self.board[rook_end_i][rook_end_j] = rook
             elif end_pos[0] == 3:
-                rook_start_pos = (1, 1)
+                rook_start_pos = (1, rank)
                 rook_start_i, rook_start_j = pos_to_indices(rook_start_pos)
-                rook_end_pos = (4, 1)
+                rook_end_pos = (4, rank)
                 rook_end_i, rook_end_j = pos_to_indices(rook_end_pos)
                 rook = self.board[rook_start_i][rook_start_j]
                 assert rook is not None
