@@ -33,6 +33,10 @@ class Game:
         copy.half_moves_count = self.half_moves_count
         copy.full_moves_count = self.full_moves_count
         return copy
+    
+    def get_piece_from_pos(self, pos: tuple[int, int]) -> int | None:
+        i, j = pos_to_indices(pos)
+        return self.board[i][j]
 
     def board_from_fen(self, fboard: str) -> list[list[int | None]]:
         board: list[list[int | None]] = []
@@ -96,8 +100,7 @@ class Game:
         return fen
  
     def legal_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
-        i, j = pos_to_indices(start_pos)
-        start_piece = self.board[i][j]
+        start_piece = self.get_piece_from_pos(start_pos)
         assert start_piece is not None
         piece_type = piece.get_piece_type(start_piece)
         legal_moves = PIECEWISE_LEGAL_MOVES[piece_type](self, start_pos)
@@ -120,8 +123,7 @@ class Game:
         game_copy = self.copy()
         game_copy.make_move(start_pos, end_pos)
         for move in game_copy.get_legal_moves():
-            i, j = pos_to_indices(move[1])
-            response_destination = game_copy.board[i][j]
+            response_destination = game_copy.get_piece_from_pos(move[1])
             if response_destination is not None:
                 piece_type = piece.get_piece_type(response_destination)
                 if piece_type == piece.KING:
@@ -136,8 +138,7 @@ class Game:
         return legal_moves
     
     def legal_moves_from_start_pos(self, start_pos: tuple[int, int]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
-        i, j = pos_to_indices(start_pos)
-        start_piece = self.board[i][j]
+        start_piece = self.get_piece_from_pos(start_pos)
         assert start_piece is not None
         piece_type = piece.get_piece_type(start_piece)
         legal_moves = PIECEWISE_LEGAL_MOVES[piece_type](self, start_pos)
@@ -151,8 +152,7 @@ class Game:
         return legal_moves
     
     def legal_move_with_check_check(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
-        i, j = pos_to_indices(start_pos)
-        start_piece = self.board[i][j]
+        start_piece = self.get_piece_from_pos(start_pos)
         assert start_piece is not None
         piece_type = piece.get_piece_type(start_piece)
         legal_moves = PIECEWISE_LEGAL_MOVES[piece_type](self, start_pos)
@@ -163,8 +163,7 @@ class Game:
     
     def get_pawn_moves(self, start_pos: tuple[int, int]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
         legal_moves = []
-        start_index, start_jndex = pos_to_indices(start_pos)
-        start_piece = self.board[start_index][start_jndex]
+        start_piece = self.get_piece_from_pos(start_pos)
         assert start_piece is not None
         piece_type, white, moved = piece.get_piece_attrs(start_piece)
         assert piece_type == piece.PAWN
@@ -222,8 +221,7 @@ class Game:
                     if end_white != self.white_move:
                         legal_moves.append((start_pos, end_pos))
                         
-        i, j = pos_to_indices(start_pos)
-        king = self.board[i][j]
+        king = self.get_piece_from_pos(start_pos)
         assert king is not None
         piece_type, piece_white, piece_moved = piece.get_piece_attrs(king)
         if not piece_moved:
@@ -243,8 +241,7 @@ class Game:
         """The arguments of this function are kind of weird but i just had too many repeated nested for loops with the arguments
         in the get_king_moves function so i think it makes the most sense here"""
         legal_moves = []
-        rook_idx, rook_jdx = pos_to_indices(rook_pos)
-        rook = self.board[rook_idx][rook_jdx]
+        rook = self.get_piece_from_pos(rook_pos)
         assert rook is not None
         rook_moved = piece.get_piece_moved(rook)
         if not rook_moved:
@@ -312,7 +309,7 @@ class Game:
         start_piece = piece.update_moved_bit(start_piece)
         self.board[start_index][start_jndex] = None
         if self.board[end_index][end_jndex] is not None:
-            self.half_moves_count = 0
+            self.half_moves_count = -1
         self.board[end_index][end_jndex] = start_piece
         self.half_moves_count += 1
         if not self.white_move:
