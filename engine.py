@@ -1,7 +1,8 @@
 from game import Game
 import piece
 import json
-import math
+import time
+from functools import lru_cache
 
 with open("openings/opening_values_d3.json", "r") as f:
     OPENING_VALUES = json.load(f)
@@ -87,7 +88,10 @@ def get_piece_value(p: int, i: int, j: int):
         value += piece_square_tables[piece_type][7 - i][j]
         return value
 
+@lru_cache
 def base_evaluation(game: Game):
+    global nodes_counted
+    nodes_counted += 1
     evaluation = 0
     for i, rank in enumerate(game.board):
         for j, item in enumerate(rank):
@@ -104,8 +108,14 @@ def minimax(game: Game, depth: int, alpha: int, beta: int) -> tuple[int, tuple[t
         best_move = None
         for move in game.get_legal_moves():
             game_copy = game.copy()
+            start_number = game_copy.get_number_of_pieces()
             game_copy.make_move(*move)
-            value, nested_move = minimax(game_copy, depth - 1, alpha, beta)
+            end_number = game_copy.get_number_of_pieces()
+            if start_number != end_number and depth == 1:
+                decrement = 0
+            else:
+                decrement = 1
+            value, nested_move = minimax(game_copy, depth - decrement, alpha, beta)
             if value > best_score:
                 best_score = value
                 best_move = move
@@ -129,7 +139,11 @@ def minimax(game: Game, depth: int, alpha: int, beta: int) -> tuple[int, tuple[t
         return best_score, best_move
     
 def get_value_and_best_move(game: Game, depth: int) -> tuple[int, tuple[tuple[int, int], tuple[int, int]] | None]:
+    global nodes_counted
+    nodes_counted = 0
+    t0 = time.time()
     value, move = minimax(game, depth, int(-1e10), int(1e10))
+    print(f"{nodes_counted} nodes counted in {time.time() - t0} seconds")
     return value, move
     
 

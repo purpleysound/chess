@@ -47,6 +47,12 @@ class Game:
     def get_piece_from_pos(self, pos: tuple[int, int]) -> int | None:
         i, j = pos_to_indices(pos)
         return self.board[i][j]
+    
+    def get_number_of_pieces(self) -> int:
+        nones = 0
+        for rank in self.board:
+            nones += rank.count(None)
+        return 64 - nones
 
     def board_from_fen(self, fboard: str) -> list[list[int | None]]:
         board: list[list[int | None]] = []
