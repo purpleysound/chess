@@ -72,6 +72,21 @@ class Game:
                        
     def get_fen(self) -> str:
         """return fen string of current game state"""
+        fen = self.get_truncated_fen()
+        fen += " "
+        if self.en_passant_square:
+            fen += pos_to_notation(self.en_passant_square)
+        else:
+            fen += "-"
+        fen += " "
+        fen += str(self.half_moves_count)
+        fen += " "
+        fen += str(self.full_moves_count)
+        return fen
+
+    def get_truncated_fen(self) -> str:
+        """return fen string of current game state without ep, half moves, and full moves
+        this is split since openings often dont have these"""
         fen = ""
         blank_count = 0
         for rank in self.board[::-1]:
@@ -104,17 +119,8 @@ class Game:
         if castling == "":
             castling = "-"
         fen += castling
-        fen += " "
-        if self.en_passant_square:
-            fen += pos_to_notation(self.en_passant_square)
-        else:
-            fen += "-"
-        fen += " "
-        fen += str(self.half_moves_count)
-        fen += " "
-        fen += str(self.full_moves_count)
         return fen
- 
+
     def legal_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
         start_piece = self.get_piece_from_pos(start_pos)
         assert start_piece is not None

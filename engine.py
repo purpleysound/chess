@@ -2,10 +2,12 @@ from game import Game
 import piece
 import json
 import time
-from functools import lru_cache
+import random
 
 with open("openings/opening_values_d3.json", "r") as f:
-    OPENING_VALUES = json.load(f)
+    OPENING_VALUES: dict[str, int] = json.load(f)
+
+OPENING_VARIATION = 1.05  # values below 1.05 are too random and above 1.1 are too consistant
 
 piece_values = {
     piece.PAWN: 100,
@@ -88,7 +90,6 @@ def get_piece_value(p: int, i: int, j: int):
         value += piece_square_tables[piece_type][7 - i][j]
         return value
 
-@lru_cache
 def base_evaluation(game: Game):
     global nodes_counted
     nodes_counted += 1
@@ -142,6 +143,26 @@ def get_value_and_best_move(game: Game, depth: int) -> tuple[int, tuple[tuple[in
     global nodes_counted
     nodes_counted = 0
     t0 = time.time()
+    
+    legal_openings = []
+    if random.randint(1, 3) != 1:
+        for move in game.get_legal_moves():
+            game_copy = game.copy()
+            game_copy.make_move(*move)
+            fen = game_copy.get_truncated_fen()
+            if fen in OPENING_VALUES:
+                legal_openings.append((OPENING_VALUES[fen], move))
+    if len(legal_openings) > 0:
+        weights = [(x[0])+881 for x in legal_openings]  # 880 is the lowest opening value
+        if not game.white_move:
+            weights = [1/x for x in weights]
+        moves = [x[1] for x in legal_openings]
+        move = random.choices(moves, weights)[0]
+        for opening in legal_openings:
+            if opening[1] == move:
+                print(f"Opening found in {time.time() - t0} seconds")
+                return opening[0], move
+
     value, move = minimax(game, depth, int(-1e10), int(1e10))
     print(f"{nodes_counted} nodes counted in {time.time() - t0} seconds")
     return value, move
