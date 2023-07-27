@@ -100,14 +100,27 @@ def base_evaluation(game: Game):
                 evaluation += get_piece_value(item, i, j)
     return evaluation
 
+def move_ordering_key(move: tuple[tuple[int, int], tuple[int, int]], game: Game) -> int:
+    start, end = move
+    start_piece = game.get_piece_from_pos(start)
+    assert start_piece is not None
+    end_piece = game.get_piece_from_pos(end)
+    if end_piece is not None:
+        return piece_values[piece.get_piece_type(end_piece)] - piece_values[piece.get_piece_type(start_piece)]
+    else:
+        return 0
+
 def minimax(game: Game, depth: int, alpha: int, beta: int) -> tuple[int, tuple[tuple[int, int], tuple[int, int]] | None]:
     if depth == 0 or game.king_taken():
         return base_evaluation(game), None
     
+    legal_moves = game.get_legal_moves()
+    legal_moves.sort(key=lambda move: move_ordering_key(move, game), reverse=True)
+
     if game.white_move:
         best_score = int(-1e10)
         best_move = None
-        for move in game.get_legal_moves():
+        for move in legal_moves:
             game_copy = game.copy()
             start_number = game_copy.get_number_of_pieces()
             game_copy.make_move(*move)
@@ -127,7 +140,7 @@ def minimax(game: Game, depth: int, alpha: int, beta: int) -> tuple[int, tuple[t
     else:
         best_score = int(1e10)
         best_move = None
-        for move in game.get_legal_moves():
+        for move in legal_moves:
             game_copy = game.copy()
             game_copy.make_move(*move)
             value, nested_move = minimax(game_copy, depth - 1, alpha, beta)
