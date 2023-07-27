@@ -81,7 +81,7 @@ piece_square_tables = {
 }
 
 def get_piece_value(p: int, i: int, j: int):
-    piece_type, piece_colour, _ = piece.get_piece_attrs(p)
+    piece_type, piece_colour = piece.get_piece_attrs(p)
     value = piece_values[piece_type]
     if not piece_colour:
         value += piece_square_tables[piece_type][i][j]

@@ -132,7 +132,7 @@ class DisplayPiece(pygame.sprite.Sprite):
         self.start_coords = coords
 
     def get_image(self) -> pygame.surface.Surface:
-        piece_type, white, _  = piece.get_piece_attrs(self.piece)
+        piece_type, white  = piece.get_piece_attrs(self.piece)
         return colour_to_img[white][piece_type]
     
     def draw(self, display: pygame.surface.Surface):

@@ -97,7 +97,7 @@ class Game:
                     if blank_count > 0:
                         fen += str(blank_count)
                         blank_count = 0
-                    piece_type, white, moved = piece.get_piece_attrs(item)
+                    piece_type, white = piece.get_piece_attrs(item)
                     fen += piece_to_letter[piece_type].upper() if white else piece_to_letter[piece_type]
             if blank_count > 0:
                 fen += str(blank_count)
@@ -134,7 +134,7 @@ class Game:
         for i, rank in enumerate(self.board):
             for j, item in enumerate(rank):
                 if item is not None:
-                    piece_type, white, moved = piece.get_piece_attrs(item)
+                    piece_type, white = piece.get_piece_attrs(item)
                     if white != self.white_move:
                         continue
                     start_pos = indices_to_pos(i, j)
@@ -187,7 +187,7 @@ class Game:
         legal_moves = []
         start_piece = self.get_piece_from_pos(start_pos)
         assert start_piece is not None
-        piece_type, white, moved = piece.get_piece_attrs(start_piece)
+        piece_type, white = piece.get_piece_attrs(start_piece)
         assert piece_type == piece.PAWN
         direction = 1 if white else -1
         ahead = vector_add(start_pos, (0, direction))
@@ -245,37 +245,32 @@ class Game:
                         
         king = self.get_piece_from_pos(start_pos)
         assert king is not None
-        piece_type, piece_white, piece_moved = piece.get_piece_attrs(king)
-        if not piece_moved:
-            if piece_white:
-                if self.castling_rights[0]:
-                    legal_moves += self.check_castling(start_pos, (8, 1), [(7, 1), (6, 1)])
-                if self.castling_rights[1]:
-                    legal_moves += self.check_castling(start_pos, (1, 1), [(2, 1), (3, 1), (4, 1)])
-            else:
-                if self.castling_rights[2]:
-                    legal_moves += self.check_castling(start_pos, (8, 8), [(7, 8), (6, 8)])
-                if self.castling_rights[3]:
-                    legal_moves += self.check_castling(start_pos, (1, 8), [(2, 8), (3, 8), (4, 8)])
+        piece_type, piece_white = piece.get_piece_attrs(king)
+        if piece_white:
+            if self.castling_rights[0]:
+                legal_moves += self.check_castling(start_pos, (8, 1), [(7, 1), (6, 1)])
+            if self.castling_rights[1]:
+                legal_moves += self.check_castling(start_pos, (1, 1), [(2, 1), (3, 1), (4, 1)])
+        else:
+            if self.castling_rights[2]:
+                legal_moves += self.check_castling(start_pos, (8, 8), [(7, 8), (6, 8)])
+            if self.castling_rights[3]:
+                legal_moves += self.check_castling(start_pos, (1, 8), [(2, 8), (3, 8), (4, 8)])
         return legal_moves
     
     def check_castling(self, start_pos, rook_pos, in_between_posses) -> list[tuple[tuple[int, int], tuple[int, int]]]:
         """The arguments of this function are kind of weird but i just had too many repeated nested for loops with the arguments
         in the get_king_moves function so i think it makes the most sense here"""
         legal_moves = []
-        rook = self.get_piece_from_pos(rook_pos)
-        assert rook is not None
-        rook_moved = piece.get_piece_moved(rook)
-        if not rook_moved:
-            in_between_indices = [pos_to_indices(pos) for pos in in_between_posses]
-            in_between_pieces = [self.board[i][j] for i, j in in_between_indices]
-            if all(piece is None for piece in in_between_pieces):
-                direction = 1 if rook_pos[0] > start_pos[0] else -1
-                if self.not_in_check_after_move(start_pos, vector_add(start_pos, (direction, 0))) and self.not_in_check_after_move(start_pos, start_pos):
-                    """This is an odd idea because this is the only time we check if we are in check in the non-check_check functions
-                    however, since you can't castle through check it is actually necessary here rather than in the rest of the cases
-                    where we are only checking it for the user in seperate functions and leaving 'pseudo-legal' moves for the engine to use"""
-                    legal_moves.append((start_pos, vector_add(start_pos, (2*direction, 0))))
+        in_between_indices = [pos_to_indices(pos) for pos in in_between_posses]
+        in_between_pieces = [self.board[i][j] for i, j in in_between_indices]
+        if all(piece is None for piece in in_between_pieces):
+            direction = 1 if rook_pos[0] > start_pos[0] else -1
+            if self.not_in_check_after_move(start_pos, vector_add(start_pos, (direction, 0))) and self.not_in_check_after_move(start_pos, start_pos):
+                """This is an odd idea because this is the only time we check if we are in check in the non-check_check functions
+                however, since you can't castle through check it is actually necessary here rather than in the rest of the cases
+                where we are only checking it for the user in seperate functions and leaving 'pseudo-legal' moves for the engine to use"""
+                legal_moves.append((start_pos, vector_add(start_pos, (2*direction, 0))))
         return legal_moves  
         
     def get_bishop_moves(self, start_pos: tuple[int, int]) -> list[tuple[tuple[int, int], tuple[int, int]]]:
@@ -328,7 +323,6 @@ class Game:
         end_index, end_jndex = pos_to_indices(end_pos)
         start_piece = self.board[start_index][start_jndex]
         assert start_piece is not None
-        start_piece = piece.update_moved_bit(start_piece)
         self.board[start_index][start_jndex] = None
         if self.board[end_index][end_jndex] is not None:
             self.half_moves_count = -1
@@ -338,7 +332,7 @@ class Game:
             self.full_moves_count += 1
         self.white_move = not self.white_move
 
-        piece_type, piece_white, piece_moved = piece.get_piece_attrs(start_piece)
+        piece_type, piece_white = piece.get_piece_attrs(start_piece)
         if piece_type == piece.PAWN and end_pos == self.en_passant_square:
             pawn_to_take_pos = end_pos[0], start_pos[1]
             i, j = pos_to_indices(pawn_to_take_pos)
@@ -351,7 +345,7 @@ class Game:
                 self.en_passant_square = vector_add(start_pos, (0, 1 if piece_white else -1))
 
             if (end_pos[1] == 1 or end_pos[1] == 8):
-                self.board[end_index][end_jndex] = piece.generate_piece(promotion_piece, piece_white, True)
+                self.board[end_index][end_jndex] = piece.generate_piece(promotion_piece, piece_white)
 
         if piece_type == piece.KING and abs(start_pos[0] - end_pos[0]) == 2:
             if piece_white:
@@ -365,7 +359,6 @@ class Game:
                 rook_end_i, rook_end_j = pos_to_indices(rook_end_pos)
                 rook = self.board[rook_start_i][rook_start_j]
                 assert rook is not None
-                rook = piece.update_moved_bit(rook)
                 self.board[rook_start_i][rook_start_j] = None
                 self.board[rook_end_i][rook_end_j] = rook
             elif end_pos[0] == 3:
@@ -375,7 +368,6 @@ class Game:
                 rook_end_i, rook_end_j = pos_to_indices(rook_end_pos)
                 rook = self.board[rook_start_i][rook_start_j]
                 assert rook is not None
-                rook = piece.update_moved_bit(rook)
                 self.board[rook_start_i][rook_start_j] = None
                 self.board[rook_end_i][rook_end_j] = rook
 
