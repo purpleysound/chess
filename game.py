@@ -12,7 +12,7 @@ class Game:
         self.half_moves_count = 0
         self.full_moves_count = 1  # in case fen doesn't have these, this might not be accurate but should affect anything too much
         try:
-            fen_list = fen.split(" ")
+            fen_list = fen.strip().split(" ")
             self.board: list[list[int | None]] = self.board_from_fen(fen_list.pop(0))  # starts in bottom left in rows, going up
             self.white_move = w_or_b[fen_list.pop(0)]
             fcastling = fen_list.pop(0)

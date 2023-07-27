@@ -33,6 +33,7 @@ CONSTANT_UI_TEXT = ["Press 'F' to print the FEN string", "Press 'L' to print the
 class User_Interface: 
     def __init__(self):
         self.display = pygame.display.set_mode((800, 800))
+        pygame.scrap.init()  # has to be initialised after display created
         self.clock = pygame.time.Clock()
         self.running = True
         self.game = Game()
@@ -66,15 +67,17 @@ class User_Interface:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_f:
                     print(self.game.get_fen())
+                if event.key == pygame.K_g:
+                    self.load_fen(pygame.scrap.get(pygame.SCRAP_TEXT).decode()[:-4])
                 if event.key == pygame.K_l:
                     print(self.game.get_legal_moves())
                 if event.key == pygame.K_o:
                     fen = opening_explorer.open_window()
                     if fen is not None and fen != "":
-                        self.game = Game(fen)
-                        self.pieces = self.generate_display_pieces()
+                        self.load_fen(fen)
                 if event.key == pygame.K_m:
                     print(engine.get_value_and_best_move(self.game, 3))
+
     
     def update(self, event: pygame.event.Event):
         for rank in self.pieces:
@@ -96,6 +99,10 @@ class User_Interface:
 
     def make_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]):
         self.game.make_move(start_pos, end_pos)
+        self.pieces = self.generate_display_pieces()
+
+    def load_fen(self, fen: str):
+        self.game = Game(fen)
         self.pieces = self.generate_display_pieces()
 
     def draw(self):
@@ -165,5 +172,6 @@ def pygame_coordinates_to_pos(tup: tuple) -> tuple[int, int]:
 
 if __name__ == "__main__":
     pygame.init()
+    pygame.display.set_caption("Chess")
     User_Interface().run()
     pygame.quit()
