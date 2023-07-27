@@ -1,5 +1,5 @@
 import pygame
-from game import Game, PIECEWISE_LEGAL_MOVES
+from game import Game
 import piece
 from utils_and_constants import *
 from openings import opening_explorer
@@ -28,9 +28,15 @@ black_class_name_to_img = {
     piece.KING: pygame.transform.smoothscale(pygame.image.load("images/bK.svg"), (64, 64)),
 }
 colour_to_img = {True: white_class_name_to_img, False: black_class_name_to_img}
-CONSTANT_UI_TEXT = ["Press 'F' to print the FEN string", "Press 'L' to print the legal moves", "Press 'O' to open the opening explorer"]
+UI_TEXT = {
+    0: ["0. Home", "1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
+    1: ["0. Home", "B. Flip Board", "A. Auto-Flip"],
+    2: ["0. Home", "F. Print FEN To Console", "C. Copy FEN To Clipboard", "V. Paste FEN From Clipboard", "O. Open Opening Explorer", "I. Open Endgame Scenarios", "Home. Load Start Position", "End. Clear Board"],
+    3: ["0. Home", "M. Print 3 Ply Engine Move To Console", "S. Start/Stop Playing Against Engine (Engine's move when enabled)"],
+    4: ["0. Home", "L. Print Legal Moves To Console"]
+}
 
-class User_Interface: 
+class UserInterface: 
     def __init__(self):
         self.display = pygame.display.set_mode((800, 800))
         pygame.scrap.init()  # has to be initialised after display created
@@ -38,6 +44,7 @@ class User_Interface:
         self.running = True
         self.game = Game()
         self.pieces: list[list[DisplayPiece | None]] = self.generate_display_pieces()
+        self.ui_text_mode = 0
 
     def generate_display_pieces(self):
         pieces: list[list[DisplayPiece | None]] = [[]]
@@ -67,7 +74,9 @@ class User_Interface:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_f:
                     print(self.game.get_fen())
-                if event.key == pygame.K_g:
+                if event.key == pygame.K_c:
+                    pygame.scrap.put(pygame.SCRAP_TEXT, self.game.get_fen().encode())
+                if event.key == pygame.K_v:
                     self.load_fen(pygame.scrap.get(pygame.SCRAP_TEXT).decode()[:-4])
                 if event.key == pygame.K_l:
                     print(self.game.get_legal_moves())
@@ -75,9 +84,20 @@ class User_Interface:
                     fen = opening_explorer.open_window()
                     if fen is not None and fen != "":
                         self.load_fen(fen)
+                if event.key == pygame.K_HOME:
+                    self.load_fen(DEFAULT_FEN) 
                 if event.key == pygame.K_m:
                     print(engine.get_value_and_best_move(self.game, 3))
-
+                if event.key == pygame.K_0:
+                    self.ui_text_mode = 0
+                if event.key == pygame.K_1:
+                    self.ui_text_mode = 1
+                if event.key == pygame.K_2:
+                    self.ui_text_mode = 2
+                if event.key == pygame.K_3:
+                    self.ui_text_mode = 3
+                if event.key == pygame.K_4:
+                    self.ui_text_mode = 4
     
     def update(self, event: pygame.event.Event):
         for rank in self.pieces:
@@ -124,8 +144,12 @@ class User_Interface:
         pygame.display.update()
 
     def get_display_text(self) -> list[str]:
-        display_text = CONSTANT_UI_TEXT.copy()
-        display_text.append(f"{'White' if self.game.white_move else 'Black'}'s turn")
+        display_text = UI_TEXT[self.ui_text_mode].copy()
+        if self.ui_text_mode == 0:
+            display_text.append(f"{'White' if self.game.white_move else 'Black'}'s turn")
+        if self.ui_text_mode == 4:
+            for key in self.game.__dict__:
+                display_text.append(f"{key}: {self.game.__dict__[key]}")
         return display_text
 
 
@@ -173,5 +197,5 @@ def pygame_coordinates_to_pos(tup: tuple) -> tuple[int, int]:
 if __name__ == "__main__":
     pygame.init()
     pygame.display.set_caption("Chess")
-    User_Interface().run()
+    UserInterface().run()
     pygame.quit()
