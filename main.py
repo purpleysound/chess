@@ -150,6 +150,7 @@ class UserInterface:
         if self.ui_text_mode == 4:
             for key in self.game.__dict__:
                 display_text.append(f"{key}: {self.game.__dict__[key]}")
+            display_text.append(f"Game State: {STATE_TO_STR[self.game.get_game_state()]}")
         return display_text
 
 

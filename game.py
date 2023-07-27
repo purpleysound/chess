@@ -23,6 +23,16 @@ class Game:
         except IndexError:
             pass
 
+    def get_game_state(self) -> int:
+        if self.half_moves_count >= 100:
+            return GAME_STATE_DRAW
+        if len(self.get_legal_moves_with_check_check()) == 0:
+            if self.in_check():
+                return GAME_STATE_BLACK_WINS if self.white_move else GAME_STATE_WHITE_WINS
+            else:
+                return GAME_STATE_DRAW
+        return GAME_STATE_ONGOING
+
     def copy(self) -> 'Game':
         copy = Game()
         copy.board = [rank[:] for rank in self.board]
@@ -143,8 +153,11 @@ class Game:
     def not_in_check_after_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
         game_copy = self.copy()
         game_copy.make_move(start_pos, end_pos)
-        for move in game_copy.get_legal_moves():
-            response_destination = game_copy.get_piece_from_pos(move[1])
+        return game_copy.in_check()
+    
+    def in_check(self) -> bool:
+        for move in self.get_legal_moves():
+            response_destination = self.get_piece_from_pos(move[1])
             if response_destination is not None:
                 piece_type = piece.get_piece_type(response_destination)
                 if piece_type == piece.KING:

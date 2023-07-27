@@ -1,5 +1,16 @@
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
+GAME_STATE_ONGOING = 0
+GAME_STATE_WHITE_WINS = 1
+GAME_STATE_BLACK_WINS = 2
+GAME_STATE_DRAW = 3
+STATE_TO_STR = {
+    GAME_STATE_ONGOING: "ongoing",
+    GAME_STATE_WHITE_WINS: "white wins",
+    GAME_STATE_BLACK_WINS: "black wins",
+    GAME_STATE_DRAW: "draw"
+}
+
 def vector_add(t1: tuple, t2: tuple) -> tuple:
     """add two tuples together"""
     return tuple(sum(i) for i in zip(t1, t2))
