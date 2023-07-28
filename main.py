@@ -10,6 +10,8 @@ CONTRASTING_COLOUR = tuple(255 - colour for colour in BACKGROUND_COLOUR)
 MOVE_INDICATOR_COLOUR = (32, 196, 32)
 BOARD_IMG = pygame.image.load("images/board.png")
 MOUSE_ACTIONS = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
+DEFAULT_ENGINE_DEPTH = 3
+FONT_SIZE = 28
 
 white_class_name_to_img = {
     piece.PAWN: pygame.transform.smoothscale(pygame.image.load("images/wP.svg"), (64, 64)),
@@ -30,9 +32,9 @@ black_class_name_to_img = {
 colour_to_img = {True: white_class_name_to_img, False: black_class_name_to_img}
 UI_TEXT = {
     0: ["0. Home", "1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
-    1: ["0. Home", "B. Flip Board", "A. Auto-Flip"],
+    1: ["0. Home", "B. Flip Board", "A. Auto-Flip", "P. Personalisation Settings"],
     2: ["0. Home", "F. Print FEN To Console", "C. Copy FEN To Clipboard", "V. Paste FEN From Clipboard", "O. Open Opening Explorer", "I. Open Endgame Scenarios", "Home. Load Start Position", "End. Clear Board"],
-    3: ["0. Home", "M. Print 3 Ply Engine Move To Console", "S. Start/Stop Playing Against Engine (Engine's move when enabled)"],
+    3: ["0. Home", "M. Print Engine Move To Console", "S. Start/Stop Playing Against Engine (Engine's move when enabled)"],
     4: ["0. Home", "L. Print Legal Moves To Console"]
 }
 
@@ -42,9 +44,13 @@ class UserInterface:
         pygame.scrap.init()  # has to be initialised after display created
         self.clock = pygame.time.Clock()
         self.running = True
+        
         self.game = Game()
         self.pieces: list[list[DisplayPiece | None]] = self.generate_display_pieces()
+
         self.ui_text_mode = 0
+        self.engine_mode = False
+        self.engine_playing = False
 
     def generate_display_pieces(self):
         pieces: list[list[DisplayPiece | None]] = [[]]
@@ -87,7 +93,12 @@ class UserInterface:
                 if event.key == pygame.K_HOME:
                     self.load_fen(DEFAULT_FEN) 
                 if event.key == pygame.K_m:
-                    print(engine.get_value_and_best_move(self.game, 3))
+                    print(engine.get_value_and_best_move(self.game, DEFAULT_ENGINE_DEPTH))
+                if event.key == pygame.K_s:
+                    self.engine_mode = not self.engine_mode
+                    self.engine_playing = True
+                    if self.engine_mode:
+                        self.make_engine_move()
                 if event.key == pygame.K_0:
                     self.ui_text_mode = 0
                 if event.key == pygame.K_1:
@@ -120,6 +131,18 @@ class UserInterface:
     def make_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]):
         self.game.make_move(start_pos, end_pos)
         self.pieces = self.generate_display_pieces()
+        if self.engine_mode:
+            self.draw()  # looks kinda ugly without
+            self.make_engine_move()
+
+    def make_engine_move(self):
+        self.engine_playing = not self.engine_playing
+        if self.engine_playing:
+            evaluation, best_move = engine.get_value_and_best_move(self.game, DEFAULT_ENGINE_DEPTH)
+            if best_move is None or not (self.game.get_game_state() == GAME_STATE_ONGOING):
+                print("No legal moves")
+                return
+            self.make_move(*best_move)
 
     def load_fen(self, fen: str):
         self.game = Game(fen)
@@ -140,7 +163,7 @@ class UserInterface:
                     item.draw(self.display)
                     continue
         for i, text in enumerate(self.get_display_text()):
-            self.display.blit(pygame.font.SysFont("Segoe UI", 32).render(text, True, CONTRASTING_COLOUR), (0, 512 + i * 32))
+            self.display.blit(pygame.font.SysFont("Segoe UI", FONT_SIZE).render(text, True, CONTRASTING_COLOUR), (0, 512 + i * FONT_SIZE))
         pygame.display.update()
 
     def get_display_text(self) -> list[str]:
