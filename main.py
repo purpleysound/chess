@@ -32,7 +32,7 @@ black_class_name_to_img = {
 colour_to_img = {True: white_class_name_to_img, False: black_class_name_to_img}
 UI_TEXT = {
     0: ["0. Home", "1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
-    1: ["0. Home", "B. Flip Board", "A. Auto-Flip", "P. Personalisation Settings"],
+    1: ["0. Home", "B. Flip Board", "P. Personalisation Settings"],
     2: ["0. Home", "F. Print FEN To Console", "C. Copy FEN To Clipboard", "V. Paste FEN From Clipboard", "O. Open Opening Explorer", "I. Open Endgame Scenarios", "Home. Load Start Position", "End. Clear Board"],
     3: ["0. Home", "M. Print Engine Move To Console", "S. Start/Stop Playing Against Engine (Engine's move when enabled)"],
     4: ["0. Home", "L. Print Legal Moves To Console"]
@@ -44,7 +44,9 @@ class UserInterface:
         pygame.scrap.init()  # has to be initialised after display created
         self.clock = pygame.time.Clock()
         self.running = True
-        
+        self.flipped = False
+        self.auto_flip = False
+
         self.game = Game()
         self.pieces: list[list[DisplayPiece | None]] = self.generate_display_pieces()
 
@@ -58,7 +60,7 @@ class UserInterface:
             for j, item in enumerate(rank):
                 if item is not None:
                     pos = indices_to_pos(i, j)
-                    pieces[-1].append(DisplayPiece(item, pos_to_pygame_coordinates(pos)))
+                    pieces[-1].append(DisplayPiece(item, pos_to_pygame_coordinates(pos), flipped=self.flipped))
                 else:
                     pieces[-1].append(None)
             pieces.append([])
@@ -78,6 +80,10 @@ class UserInterface:
             if event.type in MOUSE_ACTIONS:
                 self.update(event)
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_b:
+                    self.flip()
+                if event.key == pygame.K_a:
+                    self.auto_flip = not self.auto_flip
                 if event.key == pygame.K_f:
                     print(self.game.get_fen())
                 if event.key == pygame.K_c:
@@ -122,7 +128,7 @@ class UserInterface:
         return_value is the end position of the piece, or None if the piece was not moved"""
         if return_value is None:
             return
-        start_pos = pygame_coordinates_to_pos(piece.start_coords)
+        start_pos = pygame_coordinates_to_pos(piece.start_coords, flipped=self.flipped)
         if self.game.legal_move_with_check_check(start_pos, return_value):
             self.make_move(start_pos, return_value)
         else:
@@ -134,6 +140,9 @@ class UserInterface:
         if self.engine_mode:
             self.draw()  # looks kinda ugly without
             self.make_engine_move()
+        if self.auto_flip:
+            if self.game.white_move == self.flipped:
+                self.flip()
 
     def make_engine_move(self):
         self.engine_playing = not self.engine_playing
@@ -148,6 +157,10 @@ class UserInterface:
         self.game = Game(fen)
         self.pieces = self.generate_display_pieces()
 
+    def flip(self):
+        self.flipped = not self.flipped
+        self.pieces = self.generate_display_pieces()
+
     def draw(self):
         self.display.fill(BACKGROUND_COLOUR)
         self.display.blit(BOARD_IMG, (0, 0))
@@ -158,8 +171,8 @@ class UserInterface:
         for rank in self.pieces:
             for item in rank:
                 if item is not None and item.held:
-                    for start_pos, end_pos in self.game.legal_moves_from_start_pos_with_check_check(pygame_coordinates_to_pos(item.start_coords)):
-                        pygame.draw.circle(self.display, MOVE_INDICATOR_COLOUR, vector_add(pos_to_pygame_coordinates(end_pos), (32, 32)), 8)
+                    for start_pos, end_pos in self.game.legal_moves_from_start_pos_with_check_check(pygame_coordinates_to_pos(item.start_coords, flipped=self.flipped)):
+                        pygame.draw.circle(self.display, MOVE_INDICATOR_COLOUR, vector_add(pos_to_pygame_coordinates(end_pos, flipped=self.flipped), (32, 32)), 8)
                     item.draw(self.display)
                     continue
         for i, text in enumerate(self.get_display_text()):
@@ -170,6 +183,8 @@ class UserInterface:
         display_text = UI_TEXT[self.ui_text_mode].copy()
         if self.ui_text_mode == 0:
             display_text.append(f"{'White' if self.game.white_move else 'Black'}'s turn")
+        if self.ui_text_mode == 1:
+            display_text.append(f"A. Auto-Flip: {'Enabled' if self.auto_flip else 'Disabled'}")
         if self.ui_text_mode == 4:
             for key in self.game.__dict__:
                 display_text.append(f"{key}: {self.game.__dict__[key]}")
@@ -178,11 +193,14 @@ class UserInterface:
 
 
 class DisplayPiece(pygame.sprite.Sprite):
-    def __init__(self, piece: int, coords: tuple[int, int]):
+    def __init__(self, piece: int, coords: tuple[int, int], flipped: bool = False):
         super().__init__()
         self.piece = piece
         self.image: pygame.surface.Surface = self.get_image()
         self.rect: pygame.rect.Rect = self.image.get_rect(topleft=coords)
+        self.flipped = flipped
+        if self.flipped:
+            self.flip()
         self.held = False
         self.start_coords = coords
 
@@ -200,7 +218,7 @@ class DisplayPiece(pygame.sprite.Sprite):
                 self.start_coords = self.rect.topleft
         elif event.type == pygame.MOUSEBUTTONUP and self.held:
             self.held = False
-            end_pos = pygame_coordinates_to_pos(event.pos)
+            end_pos = pygame_coordinates_to_pos(event.pos, flipped=self.flipped)
             if any(i not in range(1, 9) for i in end_pos):
                 self.rect.topleft = self.start_coords
                 return None
@@ -208,13 +226,20 @@ class DisplayPiece(pygame.sprite.Sprite):
         elif event.type == pygame.MOUSEMOTION and self.held:
             self.rect.center = event.pos
 
+    def flip(self):
+        self.rect.topleft = pos_to_pygame_coordinates(pygame_coordinates_to_pos(self.rect.topleft), flipped=True)
 
-def pos_to_pygame_coordinates(tup: tuple) -> tuple[int, int]:
+
+def pos_to_pygame_coordinates(tup: tuple, flipped: bool = False) -> tuple[int, int]:
     # each square is 64x64, top_left is (0, 0)
+    if flipped:
+        return int((8 - tup[0]) * 64), int((tup[1] - 1) * 64)
     return int((tup[0] - 1) * 64), int((8 - tup[1]) * 64)
 
-def pygame_coordinates_to_pos(tup: tuple) -> tuple[int, int]:
+def pygame_coordinates_to_pos(tup: tuple, flipped: bool = False) -> tuple[int, int]:
     # each square is 64x64, top_left is (0, 0)
+    if flipped:
+        return int(8 - tup[0] // 64), int(tup[1] // 64 + 1)
     return int(tup[0] // 64 + 1), int(8 - tup[1] // 64)
 
 
