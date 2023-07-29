@@ -4,11 +4,13 @@ import json
 import time
 import random
 from functools import lru_cache
+import threading
 
 with open("openings/opening_values_d3.json", "r") as f:
     OPENING_VALUES: dict[str, int] = json.load(f)
 
 OPENING_VARIATION = 1.05  # values below 1.05 are too random and above 1.1 are too consistant
+nodes_counted = 0
 
 piece_values = {
     piece.PAWN: 100,
@@ -181,6 +183,24 @@ def get_value_and_best_move(game: Game, depth: int) -> tuple[int, tuple[tuple[in
     value, move = minimax(game, depth, int(-1e10), int(1e10))
     print(f"{nodes_counted} nodes counted in {time.time() - t0} seconds")
     return value, move
+    
+
+class Engine:
+    def __init__(self, game_copy: Game):
+        self.game = game_copy
+        self.depth = 2
+        self.best_move = None
+        self.evaluation = 0
+        self.running = True
+        self.thread = threading.Thread(target=self.run, daemon=True)
+        self.thread.start()
+    
+    def run(self):
+        while True:
+            if self.running:
+                self.evaluation, self.best_move = minimax(self.game, self.depth, int(-1e10), int(1e10))
+                self.depth += 1
+
     
 
 # if __name__ == "__main__":
