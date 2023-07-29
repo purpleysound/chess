@@ -15,6 +15,10 @@ def vector_add(t1: tuple, t2: tuple) -> tuple:
     """add two tuples together"""
     return tuple(sum(i) for i in zip(t1, t2))
 
+def scalar_mult(t: tuple, s: int) -> tuple:
+    """multiply a tuple by a scalar"""
+    return tuple(i * s for i in t)
+
 def indices_to_pos(index: int, jndex: int) -> tuple[int, int]:
     """converts indices to coordinates"""
     return (jndex + 1, index + 1)
