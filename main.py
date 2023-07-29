@@ -31,7 +31,7 @@ black_class_name_to_img = {
 }
 colour_to_img = {True: white_class_name_to_img, False: black_class_name_to_img}
 UI_TEXT = {
-    0: ["0. Home", "1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
+    0: ["1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
     1: ["0. Home", "B. Flip Board", "P. Personalisation Settings"],
     2: ["0. Home", "F. Print FEN To Console", "C. Copy FEN To Clipboard", "V. Paste FEN From Clipboard", "O. Open Opening Explorer", "I. Open Endgame Scenarios", "Home. Load Start Position", "End. Clear Board"],
     3: ["0. Home", "M. Print Engine Move To Console", "S. Start/Stop Playing Against Engine (Engine's move when enabled)"],
@@ -97,7 +97,9 @@ class UserInterface:
                     if fen is not None and fen != "":
                         self.load_fen(fen)
                 if event.key == pygame.K_HOME:
-                    self.load_fen(DEFAULT_FEN) 
+                    self.load_fen(DEFAULT_FEN)
+                if event.key == pygame.K_END:
+                    self.load_fen("8/8/8/8/8/8/8/8 w - - 0 1")
                 if event.key == pygame.K_m:
                     print(engine.get_value_and_best_move(self.game, DEFAULT_ENGINE_DEPTH))
                 if event.key == pygame.K_s:

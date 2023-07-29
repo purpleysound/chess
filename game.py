@@ -1,5 +1,6 @@
 import piece
 from utils_and_constants import *
+from functools import lru_cache
 
 w_or_b = {"w": True, "b": False}
 letter_to_class = {"p": piece.PAWN, "n": piece.KNIGHT, "b": piece.BISHOP, "r": piece.ROOK, "q": piece.QUEEN, "k": piece.KING}
@@ -22,6 +23,12 @@ class Game:
             self.full_moves_count = int(fen_list.pop(0))
         except IndexError:
             pass
+    
+    def __hash__(self) -> int:
+        return hash(self.get_fen())
+    
+    def __eq__(self, other: 'Game') -> bool:
+        return self.get_fen() == other.get_fen()
 
     def get_game_state(self) -> int:
         if self.half_moves_count >= 100:
@@ -137,6 +144,7 @@ class Game:
         legal_moves = PIECEWISE_LEGAL_MOVES[piece_type](self, start_pos)
         return (start_pos, end_pos) in legal_moves
     
+    @lru_cache(maxsize=512)
     def get_legal_moves(self) -> list[tuple[tuple[int, int], tuple[int, int]]]:
         """return list of legal moves in (start_pos, end_pos) format"""
         legal_moves = []

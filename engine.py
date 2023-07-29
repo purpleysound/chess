@@ -3,6 +3,7 @@ import piece
 import json
 import time
 import random
+from functools import lru_cache
 
 with open("openings/opening_values_d3.json", "r") as f:
     OPENING_VALUES: dict[str, int] = json.load(f)
@@ -90,6 +91,7 @@ def get_piece_value(p: int, i: int, j: int):
         value += piece_square_tables[piece_type][7 - i][j]
         return value
 
+@lru_cache(maxsize=65536)
 def base_evaluation(game: Game):
     global nodes_counted
     nodes_counted += 1
