@@ -120,7 +120,7 @@ class PersonalisationCustomiser:
             image = PIL.Image.open(image_path)
             image = image.resize((64, 64))
             image = PIL.ImageTk.PhotoImage(image)
-            image_button.configure(image=image._PhotoImage__photo)
+            image_button.configure(image=image)  # doesnt currently work
 
     def make_colour_picker(self, frame, text):
         """Returns a getter function for the rgb tuple, values unvalidated"""

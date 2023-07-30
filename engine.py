@@ -5,6 +5,7 @@ import time
 import random
 from functools import lru_cache
 import threading
+from utils_and_constants import *
 
 with open("openings/opening_values_d3.json", "r") as f:
     OPENING_VALUES: dict[str, int] = json.load(f)
@@ -181,8 +182,12 @@ def get_value_and_best_move(game: Game, depth: int) -> tuple[int, tuple[tuple[in
                 return opening[0], move
 
     value, move = minimax(game, depth, int(-1e10), int(1e10))
-    print(f"{nodes_counted} nodes counted in {time.time() - t0} seconds")
-    return value, move
+    t1 = time.time()
+    if t1 - t0 < preferences[Prefs.MINIMUM_ENGINE_TIME]:
+        return get_value_and_best_move(game, depth + 1)
+    else:
+        print(f"{nodes_counted} nodes counted in {time.time() - t0} seconds at depth {depth}")
+        return value, move
     
 
 class Engine:
