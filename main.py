@@ -213,7 +213,10 @@ class DisplayPiece(pygame.sprite.Sprite):
         self.start_coords = coords
 
     def get_image(self) -> pygame.surface.Surface:
-        return load_image(preferences[Prefs.PIECE_IMAGES][self.piece], (64, 64))
+        try:
+            return load_image(preferences[Prefs.PIECE_IMAGES][self.piece], (64, 64))
+        except FileNotFoundError:
+            return load_image(DEFAULT_PREFERENCES[Prefs.PIECE_IMAGES][self.piece], (64, 64))
     
     def draw(self, display: pygame.surface.Surface):
         display.blit(self.image, self.rect) # type: ignore (pygame types are silly)

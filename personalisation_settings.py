@@ -1,11 +1,16 @@
 from utils_and_constants import *
 import pickle
 import tkinter
+import tkinter.filedialog
+import PIL.Image
+import PIL.ImageTk
 
 class PersonalisationCustomiser:
     def __init__(self) -> None:
         self.root = tkinter.Tk()
         self.root.title("Personalisation Customiser")
+        
+        self.images = {}
 
     def run(self):
         # average tkinter program yippee!!
@@ -39,8 +44,28 @@ class PersonalisationCustomiser:
         min_engine_time_entry = tkinter.Entry(min_engine_time_frame)
         min_engine_time_entry.pack()
         self.min_engine_time_getter = lambda: int(min_engine_time_entry.get())
+
+        piece_images_frame = tkinter.Frame(self.root)
+        piece_images_frame.grid(row=2, column=0, columnspan=3)
+        white_piece_images_frame = tkinter.Frame(piece_images_frame)
+        white_piece_images_frame.grid(row=0, column=0)
+        black_piece_images_frame = tkinter.Frame(piece_images_frame)
+        black_piece_images_frame.grid(row=1, column=0)
+        PIECE_NAMES = ["Pawn", "Knight", "Bishop", "Rook", "Queen", "King"]
+        for piece in range(6):
+            white_piece_image_frame = tkinter.Frame(white_piece_images_frame)
+            white_piece_image_frame.grid(row=0, column=piece)
+            white_piece_image_label = tkinter.Label(white_piece_image_frame, text=PIECE_NAMES[piece])
+            white_piece_image_label.pack()
+            self.make_image_uploader(white_piece_image_frame, f"White {PIECE_NAMES[piece]}", piece+8)
+            black_piece_image_frame = tkinter.Frame(black_piece_images_frame)
+            black_piece_image_frame.grid(row=1, column=piece)
+            black_piece_image_label = tkinter.Label(black_piece_image_frame, text=PIECE_NAMES[piece])
+            black_piece_image_label.pack()
+            self.make_image_uploader(black_piece_image_frame, f"Black {PIECE_NAMES[piece]}", piece)
+
         finish_buttons_frame = tkinter.Frame(self.root)
-        finish_buttons_frame.grid(row=2, column=0, columnspan=3)
+        finish_buttons_frame.grid(row=3, column=0, columnspan=3)
         submit_button = tkinter.Button(finish_buttons_frame, text="Submit (invalid inputs will not be changed)", command=self.submit)
         submit_button.grid(row=0, column=0)
         reset_button = tkinter.Button(finish_buttons_frame, text="Reset to Defaults", command=self.reset)
@@ -71,11 +96,32 @@ class PersonalisationCustomiser:
                 pref[key] = getter()
             except ValueError:
                 pass
+        for key, image in self.images.items():
+            if image:
+                pref[Prefs.PIECE_IMAGES][key] = image
         with open("preferences.pkl", "wb") as f:
             pickle.dump(pref, f)
         print("Please restart the program for changes to take effect.")
         self.root.destroy()
-        
+
+    def make_image_uploader(self, frame, text, piece: int):
+        label = tkinter.Label(frame, text=text)
+        label.pack()
+        image_button = tkinter.Button(frame, width=64, height=64, image=tkinter.PhotoImage(file="images/transparent.png"))
+        image_button.pack()
+        browse_button = tkinter.Button(frame, text="Browse", command=lambda: self.browse_image(image_button, piece))
+        browse_button.pack(side=tkinter.BOTTOM)
+
+    def browse_image(self, image_button: tkinter.Button, key: int):
+        f_types = [("PNG", "*.png"), ("JPEG", "*.jpg"), ("SVG", "*.svg")]
+        image_path = tkinter.filedialog.askopenfilename(filetypes=f_types)
+        if image_path:
+            self.images[key] = image_path
+            image = PIL.Image.open(image_path)
+            image = image.resize((64, 64))
+            image = PIL.ImageTk.PhotoImage(image)
+            image_button.configure(image=image._PhotoImage__photo)
+
     def make_colour_picker(self, frame, text):
         """Returns a getter function for the rgb tuple, values unvalidated"""
         label = tkinter.Label(frame, text=text)
