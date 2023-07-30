@@ -5,29 +5,37 @@ from utils_and_constants import *
 from openings import opening_explorer
 import engine
 
+def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
+    image = pygame.image.load(path)
+    try:
+        image = pygame.transform.smoothscale(image, size)
+    except ValueError:
+        image = pygame.transform.scale(image, size)
+    return image
+
 BACKGROUND_COLOUR = (64, 64, 64)
 CONTRASTING_COLOUR = tuple(255 - colour for colour in BACKGROUND_COLOUR)
 MOVE_INDICATOR_COLOUR = (32, 196, 32)
-BOARD_IMG = pygame.image.load("images/board.png")
+BOARD_IMG = load_image("images/board.png", (512, 512))
 MOUSE_ACTIONS = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
 DEFAULT_ENGINE_DEPTH = 3
 FONT_SIZE = 28
 
 white_class_name_to_img = {
-    piece.PAWN: pygame.transform.smoothscale(pygame.image.load("images/wP.svg"), (64, 64)),
-    piece.KNIGHT: pygame.transform.smoothscale(pygame.image.load("images/wN.svg"), (64, 64)),
-    piece.BISHOP: pygame.transform.smoothscale(pygame.image.load("images/wB.svg"), (64, 64)),
-    piece.ROOK: pygame.transform.smoothscale(pygame.image.load("images/wR.svg"), (64, 64)),
-    piece.QUEEN: pygame.transform.smoothscale(pygame.image.load("images/wQ.svg"), (64, 64)),
-    piece.KING: pygame.transform.smoothscale(pygame.image.load("images/wK.svg"), (64, 64)),
+    piece.PAWN: load_image("images/wP.svg", (64, 64)),
+    piece.KNIGHT: load_image("images/wN.svg", (64, 64)),
+    piece.BISHOP: load_image("images/wB.svg", (64, 64)),
+    piece.ROOK: load_image("images/wR.svg", (64, 64)),
+    piece.QUEEN: load_image("images/wQ.svg", (64, 64)),
+    piece.KING: load_image("images/wK.svg", (64, 64)),
 }
 black_class_name_to_img = {
-    piece.PAWN: pygame.transform.smoothscale(pygame.image.load("images/bP.svg"), (64, 64)),
-    piece.KNIGHT: pygame.transform.smoothscale(pygame.image.load("images/bN.svg"), (64, 64)),
-    piece.BISHOP: pygame.transform.smoothscale(pygame.image.load("images/bB.svg"), (64, 64)),
-    piece.ROOK: pygame.transform.smoothscale(pygame.image.load("images/bR.svg"), (64, 64)),
-    piece.QUEEN: pygame.transform.smoothscale(pygame.image.load("images/bQ.svg"), (64, 64)),
-    piece.KING: pygame.transform.smoothscale(pygame.image.load("images/bK.svg"), (64, 64)),
+    piece.PAWN: load_image("images/bP.svg", (64, 64)),
+    piece.KNIGHT: load_image("images/bN.svg", (64, 64)),
+    piece.BISHOP: load_image("images/bB.svg", (64, 64)),
+    piece.ROOK: load_image("images/bR.svg", (64, 64)),
+    piece.QUEEN: load_image("images/bQ.svg", (64, 64)),
+    piece.KING: load_image("images/bK.svg", (64, 64)),
 }
 colour_to_img = {True: white_class_name_to_img, False: black_class_name_to_img}
 UI_TEXT = {
