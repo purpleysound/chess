@@ -13,31 +13,9 @@ def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
         image = pygame.transform.scale(image, size)
     return image
 
-BACKGROUND_COLOUR = (64, 64, 64)
-CONTRASTING_COLOUR = tuple(255 - colour for colour in BACKGROUND_COLOUR)
-MOVE_INDICATOR_COLOUR = (32, 196, 32)
-BOARD_IMG = load_image("images/board.png", (512, 512))
+BOARD_IMG = load_image(preferences[Prefs.BOARD_IMAGE], (512, 512))
 MOUSE_ACTIONS = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
-DEFAULT_ENGINE_DEPTH = 3
-FONT_SIZE = 28
 
-white_class_name_to_img = {
-    piece.PAWN: load_image("images/wP.svg", (64, 64)),
-    piece.KNIGHT: load_image("images/wN.svg", (64, 64)),
-    piece.BISHOP: load_image("images/wB.svg", (64, 64)),
-    piece.ROOK: load_image("images/wR.svg", (64, 64)),
-    piece.QUEEN: load_image("images/wQ.svg", (64, 64)),
-    piece.KING: load_image("images/wK.svg", (64, 64)),
-}
-black_class_name_to_img = {
-    piece.PAWN: load_image("images/bP.svg", (64, 64)),
-    piece.KNIGHT: load_image("images/bN.svg", (64, 64)),
-    piece.BISHOP: load_image("images/bB.svg", (64, 64)),
-    piece.ROOK: load_image("images/bR.svg", (64, 64)),
-    piece.QUEEN: load_image("images/bQ.svg", (64, 64)),
-    piece.KING: load_image("images/bK.svg", (64, 64)),
-}
-colour_to_img = {True: white_class_name_to_img, False: black_class_name_to_img}
 UI_TEXT = {
     0: ["1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
     1: ["0. Home", "B. Flip Board", "P. Personalisation Settings"],
@@ -112,7 +90,7 @@ class UserInterface:
                 if event.key == pygame.K_END:
                     self.load_fen("8/8/8/8/8/8/8/8 w - - 0 1")
                 if event.key == pygame.K_m:
-                    print(engine.get_value_and_best_move(self.game, DEFAULT_ENGINE_DEPTH))
+                    print(engine.get_value_and_best_move(self.game, preferences[Prefs.DEFAULT_ENGINE_DEPTH]))
                 if event.key == pygame.K_s:
                     self.engine_mode = not self.engine_mode
                     self.engine_playing = True
@@ -169,7 +147,7 @@ class UserInterface:
     def make_engine_move(self):
         self.engine_playing = not self.engine_playing
         if self.engine_playing:
-            evaluation, best_move = engine.get_value_and_best_move(self.game, DEFAULT_ENGINE_DEPTH)
+            evaluation, best_move = engine.get_value_and_best_move(self.game, preferences[Prefs.DEFAULT_ENGINE_DEPTH])
             if best_move is None or not (self.game.get_game_state() == GameState.ONGOING):
                 print("No legal moves")
                 return
@@ -184,7 +162,7 @@ class UserInterface:
         self.pieces = self.generate_display_pieces()
 
     def draw(self):
-        self.display.fill(BACKGROUND_COLOUR)
+        self.display.fill(preferences[Prefs.BACKGROUND_COLOUR])
         self.display.blit(BOARD_IMG, (0, 0))
         for rank in self.pieces:
             for item in rank:
@@ -194,11 +172,11 @@ class UserInterface:
             for item in rank:
                 if item is not None and item.held:
                     for start_pos, end_pos in self.game.legal_moves_from_start_pos_with_check_check(pygame_coordinates_to_pos(item.start_coords, flipped=self.flipped)):
-                        pygame.draw.circle(self.display, MOVE_INDICATOR_COLOUR, vector_add(pos_to_pygame_coordinates(end_pos, flipped=self.flipped), (32, 32)), 8)
+                        pygame.draw.circle(self.display, preferences[Prefs.MOVE_INDICATOR_COLOUR], vector_add(pos_to_pygame_coordinates(end_pos, flipped=self.flipped), (32, 32)), 8)
                     item.draw(self.display)
                     continue
         for i, text in enumerate(self.get_display_text()):
-            self.display.blit(pygame.font.SysFont("Segoe UI", FONT_SIZE).render(text, True, CONTRASTING_COLOUR), (0, 512 + i * FONT_SIZE))
+            self.display.blit(pygame.font.SysFont("Segoe UI", preferences[Prefs.FONT_SIZE]).render(text, True, preferences[Prefs.CONTRASTING_COLOUR]), (0, 512 + i * preferences[Prefs.FONT_SIZE]))
         pygame.display.update()
 
     def get_display_text(self) -> list[str]:
@@ -232,8 +210,7 @@ class DisplayPiece(pygame.sprite.Sprite):
         self.start_coords = coords
 
     def get_image(self) -> pygame.surface.Surface:
-        piece_type, white  = piece.get_piece_attrs(self.piece)
-        return colour_to_img[white][piece_type]
+        return load_image(preferences[Prefs.PIECE_IMAGES][self.piece], (64, 64))
     
     def draw(self, display: pygame.surface.Surface):
         display.blit(self.image, self.rect) # type: ignore (pygame types are silly)

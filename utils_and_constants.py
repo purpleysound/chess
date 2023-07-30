@@ -1,4 +1,5 @@
 import enum
+import pickle
 
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -15,9 +16,47 @@ STATE_TO_STR = {
     GameState.DRAW: "draw"
 }
 
-preferences = {
+class Prefs:
+    BACKGROUND_COLOUR = 0
+    CONTRASTING_COLOUR = 1
+    MOVE_INDICATOR_COLOUR = 2
+    DEFAULT_ENGINE_DEPTH = 3
+    FONT_SIZE = 4
+    MINIMUM_ENGINE_TIME = 5
+    PIECE_IMAGES = 6
+    BOARD_IMAGE = 7
 
-}
+# DEFAULT_PREFERENCES = {
+#     Prefs.BACKGROUND_COLOUR: (64, 64, 64),
+#     Prefs.CONTRASTING_COLOUR: (192, 192, 192),
+#     Prefs.MOVE_INDICATOR_COLOUR: (32, 196, 32),
+#     Prefs.DEFAULT_ENGINE_DEPTH: 3,
+#     Prefs.FONT_SIZE: 28,
+#     Prefs.MINIMUM_ENGINE_TIME: 1,
+#     Prefs.PIECE_IMAGES: {
+#         # keys are piece: int
+#         8: "images/wP.svg",
+#         9: "images/wN.svg",
+#         10: "images/wB.svg",
+#         11: "images/wR.svg",
+#         12: "images/wQ.svg",
+#         13: "images/wK.svg",
+#         0: "images/bP.svg",
+#         1: "images/bN.svg",
+#         2: "images/bB.svg",
+#         3: "images/bR.svg",
+#         4: "images/bQ.svg",
+#         5: "images/bK.svg"
+#     },
+#     Prefs.BOARD_IMAGE: "images/board.png"
+# }
+
+with open("default_preferences.pkl", "rb") as f:
+    DEFAULT_PREFERENCES = pickle.load(f)
+
+with open("preferences.pkl", "rb") as f:
+    preferences = pickle.load(f)
+    print(preferences)
 
 def vector_add(t1: tuple, t2: tuple) -> tuple:
     """add two tuples together"""
