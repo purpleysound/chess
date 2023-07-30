@@ -1,14 +1,22 @@
+import enum
+
 DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-GAME_STATE_ONGOING = 0
-GAME_STATE_WHITE_WINS = 1
-GAME_STATE_BLACK_WINS = 2
-GAME_STATE_DRAW = 3
+class GameState(enum.Enum):
+    ONGOING = 0
+    WHITE_WINS = 1
+    BLACK_WINS = 2
+    DRAW = 3
+
 STATE_TO_STR = {
-    GAME_STATE_ONGOING: "ongoing",
-    GAME_STATE_WHITE_WINS: "white wins",
-    GAME_STATE_BLACK_WINS: "black wins",
-    GAME_STATE_DRAW: "draw"
+    GameState.ONGOING: "ongoing",
+    GameState.WHITE_WINS: "white wins",
+    GameState.BLACK_WINS: "black wins",
+    GameState.DRAW: "draw"
+}
+
+preferences = {
+
 }
 
 def vector_add(t1: tuple, t2: tuple) -> tuple:

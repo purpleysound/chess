@@ -162,7 +162,7 @@ class UserInterface:
         self.engine_playing = not self.engine_playing
         if self.engine_playing:
             evaluation, best_move = engine.get_value_and_best_move(self.game, DEFAULT_ENGINE_DEPTH)
-            if best_move is None or not (self.game.get_game_state() == GAME_STATE_ONGOING):
+            if best_move is None or not (self.game.get_game_state() == GameState.ONGOING):
                 print("No legal moves")
                 return
             self.make_move(*best_move)

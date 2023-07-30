@@ -30,15 +30,15 @@ class Game:
     def __eq__(self, other: 'Game') -> bool:
         return self.get_fen() == other.get_fen()
 
-    def get_game_state(self) -> int:
+    def get_game_state(self):
         if self.half_moves_count >= 100:
-            return GAME_STATE_DRAW
+            return GameState.DRAW
         if len(self.get_legal_moves_with_check_check()) == 0:
             if self.in_check():
-                return GAME_STATE_BLACK_WINS if self.white_move else GAME_STATE_WHITE_WINS
+                return GameState.BLACK_WINS if self.white_move else GameState.WHITE_WINS
             else:
-                return GAME_STATE_DRAW
-        return GAME_STATE_ONGOING
+                return GameState.DRAW
+        return GameState.ONGOING
 
     def copy(self) -> 'Game':
         copy = Game()
