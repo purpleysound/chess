@@ -4,6 +4,7 @@ import piece
 from utils_and_constants import *
 from openings import opening_explorer
 import engine
+import personalisation_settings
 
 def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
     image = pygame.image.load(path)
@@ -73,6 +74,8 @@ class UserInterface:
                     self.flip()
                 if event.key == pygame.K_a:
                     self.auto_flip = not self.auto_flip
+                if event.key == pygame.K_p:
+                    personalisation_settings.open_window()
                 if event.key == pygame.K_f:
                     print(self.game.get_fen())
                 if event.key == pygame.K_c:

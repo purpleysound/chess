@@ -56,7 +56,6 @@ with open("default_preferences.pkl", "rb") as f:
 
 with open("preferences.pkl", "rb") as f:
     preferences = pickle.load(f)
-    print(preferences)
 
 def vector_add(t1: tuple, t2: tuple) -> tuple:
     """add two tuples together"""
