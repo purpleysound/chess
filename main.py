@@ -5,6 +5,7 @@ from utils_and_constants import *
 from openings import opening_explorer
 import engine
 import personalisation_settings
+import scenario_creator
 
 def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
     image = pygame.image.load(path)
@@ -86,6 +87,10 @@ class UserInterface:
                     print(self.game.get_legal_moves())
                 if event.key == pygame.K_o:
                     fen = opening_explorer.open_window()
+                    if fen is not None and fen != "":
+                        self.load_fen(fen)
+                if event.key == pygame.K_i:
+                    fen = scenario_creator.main()
                     if fen is not None and fen != "":
                         self.load_fen(fen)
                 if event.key == pygame.K_HOME:
