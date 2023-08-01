@@ -81,6 +81,10 @@ def pos_move_to_uci(move: tuple[tuple[int, int], tuple[int, int]]) -> str:
     """converts a move in coordinates to UCI notation"""
     return f"{pos_to_notation(move[0])}{pos_to_notation(move[1])}"
 
+def uci_to_pos_move(move: str) -> tuple[tuple[int, int], tuple[int, int]]:
+    """converts a move in UCI notation to coordinates"""
+    return (notation_to_pos(move[:2]), notation_to_pos(move[2:]))
+
 def notation_to_pos(notation: str) -> tuple[int, int]:
     """converts algebraic notation to coordinates"""
     return (ord(notation[0]) - 96, int(notation[1]))
