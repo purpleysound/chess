@@ -83,9 +83,28 @@ piece_square_tables = {
         [20, 30, 10, 0, 0, 10, 30, 20]
     ]
 }
+EARLY_GAME_KING = [
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-20, -30, -30, -40, -40, -30, -30, -20],
+    [-10, -20, -20, -20, -20, -20, -20, -10],
+    [20, 20, 0, 0, 0, 0, 20, 20],
+    [20, 30, 10, 0, 0, 10, 30, 20]
+]
+LATE_GAME_KING = [
+    [-50, -40, -30, -20, -20, -30, -40, -50],
+    [-30, -20, -10, 0, 0, -10, -20, -30],
+    [-30, -10, 20, 30, 30, 20, -10, -30],
+    [-30, -10, 30, 40, 40, 30, -10, -30],
+    [-30, -10, 30, 40, 40, 30, -10, -30],
+    [-30, -10, 20, 30, 30, 20, -10, -30],
+    [-30, -30, 0, 0, 0, 0, -30, -30],
+    [-50, -30, -30, -30, -30, -30, -30, -50]
+]
 
-def get_piece_value(p: int, i: int, j: int):
-    piece_type, piece_colour = piece.get_piece_attrs(p)
+def get_piece_value(piece_type: int, piece_colour: bool, i: int, j: int):
     value = piece_values[piece_type]
     if not piece_colour:
         value += piece_square_tables[piece_type][i][j]
@@ -99,10 +118,39 @@ def base_evaluation(game: Game):
     global nodes_counted
     nodes_counted += 1
     evaluation = 0
+    w_pawn_count = 0
+    b_pawn_count = 0
+    piece_count = 0
     for i, rank in enumerate(game.board):
         for j, item in enumerate(rank):
             if item is not None:
-                evaluation += get_piece_value(item, i, j)
+                piece_type, piece_colour = piece.get_piece_attrs(item)
+                if piece_type == piece.PAWN:
+                    if piece_colour:
+                        w_pawn_count += 1
+                    else:
+                        b_pawn_count += 1
+                if piece_type == piece.KING:
+                    if piece_colour:
+                        w_king_tuple = (piece_type, piece_colour, i, j)
+                    else:
+                        b_king_tuple = (piece_type, piece_colour, i, j)
+                else:
+                    evaluation += get_piece_value(piece_type, piece_colour, i, j)
+                    piece_count += 1
+    evaluation += 5*(w_pawn_count**2 - b_pawn_count**2)
+    if piece_count <= 12:
+        piece_square_tables[piece.KING] = LATE_GAME_KING
+    else:
+        piece_square_tables[piece.KING] = EARLY_GAME_KING
+    try:
+        evaluation += get_piece_value(*w_king_tuple) # type: ignore
+    except UnboundLocalError:
+        return -10000
+    try:
+        evaluation += get_piece_value(*b_king_tuple) # type: ignore
+    except UnboundLocalError:
+        return 10000
     return evaluation
 
 def move_ordering_key(move: tuple[tuple[int, int], tuple[int, int]], game: Game) -> int:
