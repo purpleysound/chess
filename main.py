@@ -6,6 +6,7 @@ from openings import opening_explorer
 import engine
 import personalisation_settings
 import scenario_creator
+import requests
 
 def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
     image = pygame.image.load(path)
@@ -15,6 +16,7 @@ def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
         image = pygame.transform.scale(image, size)
     return image
 
+SERVER_URL = "localhost:5000"
 BOARD_IMG = load_image(preferences[Prefs.BOARD_IMAGE], (512, 512))
 MOUSE_ACTIONS = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
 
@@ -22,7 +24,7 @@ UI_TEXT = {
     0: ["1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
     1: ["0. Home", "B. Flip Board", "P. Personalisation Settings"],
     2: ["0. Home", "F. Print FEN To Console", "C. Copy FEN To Clipboard", "V. Paste FEN From Clipboard", "O. Open Opening Explorer", "I. Open Endgame Scenarios", "Home. Load Start Position", "End. Clear Board"],
-    3: ["0. Home", "M. Print Engine Move To Console", "S. Start/Stop Playing Against Engine (Engine's move when enabled)", "E. Start/Stop Deep Engine Analysis"],
+    3: ["0. Home", "M. Print Engine Move To Console", "S. Start/Stop Playing Against Engine (Engine's move when enabled)", "E. Start/Stop Deep Engine Analysis", "Z. Deep Server Analysis"],
     4: ["0. Home", "L. Print Legal Moves To Console"]
 }
 
@@ -110,6 +112,16 @@ class UserInterface:
                     else:
                         self.background_engine.running = False
                         self.background_engine = None
+                if event.key == pygame.K_z:
+                    try:
+                        fen = self.game.get_fen()
+                        fen = fen.replace(" ", "%20")
+                        fen = fen.replace("/", "=")
+                        queryparams = {"d": str(preferences[Prefs.DEFAULT_ENGINE_DEPTH] + 1)}
+                        response = requests.get(f"http://{SERVER_URL}/chess/{fen}", params=queryparams)
+                        print(response.json())
+                    except Exception as e:
+                        print(e)
                 if event.key == pygame.K_0:
                     self.ui_text_mode = 0
                 if event.key == pygame.K_1:
