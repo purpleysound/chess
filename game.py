@@ -34,7 +34,7 @@ class Game:
         if self.half_moves_count >= 100:
             return GameState.DRAW
         if len(self.get_legal_moves_with_check_check()) == 0:
-            if self.in_check():
+            if self.not_in_check():
                 return GameState.BLACK_WINS if self.white_move else GameState.WHITE_WINS
             else:
                 return GameState.DRAW
@@ -161,9 +161,9 @@ class Game:
     def not_in_check_after_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]) -> bool:
         game_copy = self.copy()
         game_copy.make_move(start_pos, end_pos)
-        return game_copy.in_check()
+        return game_copy.not_in_check()
     
-    def in_check(self) -> bool:
+    def not_in_check(self) -> bool:
         for move in self.get_legal_moves():
             response_destination = self.get_piece_from_pos(move[1])
             if response_destination is not None:
