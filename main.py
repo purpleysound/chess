@@ -76,7 +76,8 @@ class UserInterface:
                     self.background_engine.running = False
                 self.running = False
             if event.type in MOUSE_ACTIONS:
-                self.update(event)
+                if event.type == pygame.MOUSEMOTION or event.button == 1:
+                    self.update(event)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_b:
                     self.flip()
