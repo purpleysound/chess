@@ -39,6 +39,15 @@ class Game:
             else:
                 return GameState.DRAW
         return GameState.ONGOING
+    
+    def get_full_moves_count(self):
+        return self.full_moves_count
+    
+    def get_white_move(self):
+        return self.white_move
+    
+    def get_board(self):
+        return self.board
 
     def copy(self) -> 'Game':
         copy = Game()
