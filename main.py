@@ -24,7 +24,7 @@ UI_TEXT = {
     0: ["1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
     1: ["0. Home", "B. Flip Board", "P. Personalisation Settings", "Left Arrow. Back", "Right Arrow. Forward"],
     2: ["0. Home", "F. Print FEN To Console", "C. Copy FEN To Clipboard", "V. Paste FEN From Clipboard", "O. Open Opening Explorer", "I. Open Endgame Scenarios", "Home. Load Start Position", "End. Clear Board"],
-    3: ["0. Home", "M. Print Engine Move To Console", "S. Start/Stop Playing Against Engine (Engine's move when enabled)", "E. Start/Stop Deep Engine Analysis", "Z. Deep Server Analysis"],
+    3: ["0. Home", "M. Print Engine Move To Console", "S. Start/Stop Playing Against Engine (Players's move when enabled)", "E. Start/Stop Deep Engine Analysis", "Z. Deep Server Analysis"],
     4: ["0. Home", "L. Print Legal Moves To Console"]
 }
 
@@ -48,11 +48,11 @@ class UserInterface:
         self.list_of_FENs: list[str | None] = [self.game.get_fen()]
 
     def get_current_list_of_FENs_idx(self) -> int:
-        return 2*self.game.full_moves_count + (not self.game.white_move) - 2
+        return 2*self.game.get_full_moves_count() + (not self.game.get_white_move()) - 2
 
     def generate_display_pieces(self):
         pieces: list[list[DisplayPiece | None]] = [[]]
-        for i, rank in enumerate(self.game.board):
+        for i, rank in enumerate(self.game.get_board()):
             for j, item in enumerate(rank):
                 if item is not None:
                     pos = indices_to_pos(i, j)
@@ -146,7 +146,7 @@ class UserInterface:
     def update(self, event: pygame.event.Event):
         for rank in self.pieces:
             for item in rank:
-                if item is not None and piece.get_piece_colour(item.piece) == self.game.white_move:
+                if item is not None and piece.get_piece_colour(item.piece) == self.game.get_white_move():
                     return_value = item.update(event)
                     self.handle_piece_update_return_value(item, return_value)
 
@@ -175,7 +175,7 @@ class UserInterface:
             self.background_engine = engine.Engine(self.game.copy())
 
         if self.auto_flip:
-            if self.game.white_move == self.flipped:
+            if self.game.get_white_move() == self.flipped:
                 self.flip()
 
     def make_engine_move(self):
@@ -231,7 +231,7 @@ class UserInterface:
     def get_display_text(self) -> list[str]:
         display_text = UI_TEXT[self.ui_text_mode].copy()
         if self.ui_text_mode == 0:
-            display_text.append(f"{'White' if self.game.white_move else 'Black'}'s turn")
+            display_text.append(f"{'White' if self.game.get_white_move() else 'Black'}'s turn")
         if self.ui_text_mode == 1:
             display_text.append(f"A. Auto-Flip: {'Enabled' if self.auto_flip else 'Disabled'}")
         if self.ui_text_mode == 3:
@@ -240,6 +240,8 @@ class UserInterface:
                 if self.background_engine.best_move is not None:
                     display_text.append(f"Best move {pos_move_to_uci(self.background_engine.best_move)}")
         if self.ui_text_mode == 4:
+            # This is usually really bad practice however for this case where we are debugging,
+            # we actually do want to read the objects internal dictionary
             for key in self.game.__dict__:
                 display_text.append(f"{key}: {self.game.__dict__[key]}")
             display_text.append(f"Game State: {STATE_TO_STR[self.game.get_game_state()]}")

@@ -46,9 +46,9 @@ class ScenarioCreator:
                 return
             g = game.Game(self.fen)
             g.white_move = not g.white_move
-            if g.in_check():  # im probably being stupid but i swear it should be not g.in_check() but that gives the opposite result
+            if g.not_in_check():
                 g.white_move = not g.white_move
-                if g.in_check():
+                if g.not_in_check():
                     self.root.destroy()
                     return
 
