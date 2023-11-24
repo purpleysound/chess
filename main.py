@@ -164,6 +164,7 @@ class UserInterface:
     def make_move(self, start_pos: tuple[int, int], end_pos: tuple[int, int]):
         self.game.make_move(start_pos, end_pos)
         self.pieces = self.generate_display_pieces()
+        self.list_of_FENs = self.list_of_FENs[0:self.get_current_list_of_FENs_idx()]
         self.list_of_FENs.append(self.game.get_fen())
 
         if self.engine_mode:
