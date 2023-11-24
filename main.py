@@ -6,7 +6,7 @@ from openings import opening_explorer
 import engine
 import personalisation_settings
 import scenario_creator
-import requests
+# import requests
 
 def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
     image = pygame.image.load(path)
@@ -19,6 +19,8 @@ def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
 SERVER_URL = "localhost:5000"
 BOARD_IMG = load_image(preferences[Prefs.BOARD_IMAGE], (512, 512))
 MOUSE_ACTIONS = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
+pygame.font.init()
+FONT = pygame.font.SysFont("Segoe UI", preferences[Prefs.FONT_SIZE])
 
 UI_TEXT = {
     0: ["1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
@@ -46,6 +48,7 @@ class UserInterface:
         self.background_engine = None
 
         self.list_of_FENs: list[str | None] = [self.game.get_fen()]
+        self.move_list = MoveList()
 
     def get_current_list_of_FENs_idx(self) -> int:
         return 2*self.game.get_full_moves_count() + (not self.game.get_white_move()) - 2
@@ -165,6 +168,9 @@ class UserInterface:
         self.game.make_move(start_pos, end_pos)
         self.pieces = self.generate_display_pieces()
         self.list_of_FENs = self.list_of_FENs[0:self.get_current_list_of_FENs_idx()]
+        self.move_list.crop(self.get_current_list_of_FENs_idx())
+        self.move_list.append(pos_move_to_uci((start_pos, end_pos)))
+        self.move_list.set_current_idx(self.get_current_list_of_FENs_idx()-1)
         self.list_of_FENs.append(self.game.get_fen())
 
         if self.engine_mode:
@@ -192,8 +198,13 @@ class UserInterface:
         self.pieces = self.generate_display_pieces()
         if reset_list_of_FENs:
             self.list_of_FENs = [self.game.get_fen()]
+            self.move_list = MoveList()
             while self.get_current_list_of_FENs_idx() != len(self.list_of_FENs) - 1:
                 self.list_of_FENs.insert(0, None)  # make sure current_idx is correct
+                self.move_list.prepend("--")
+            self.move_list.prepend("--")
+            self.move_list.prepend("--")
+        self.move_list.set_current_idx(self.get_current_list_of_FENs_idx()-1)
 
     def scroll_through_game(self, left: bool):
         if left:
@@ -225,7 +236,8 @@ class UserInterface:
                     item.draw(self.display)
                     continue
         for i, text in enumerate(self.get_display_text()):
-            self.display.blit(pygame.font.SysFont("Segoe UI", preferences[Prefs.FONT_SIZE]).render(text, True, preferences[Prefs.CONTRASTING_COLOUR]), (0, 512 + i * preferences[Prefs.FONT_SIZE]))
+            self.display.blit(FONT.render(text, True, preferences[Prefs.CONTRASTING_COLOUR]), (0, 512 + i * preferences[Prefs.FONT_SIZE]))
+        self.move_list.draw(self.display)
         pygame.display.update()
 
     def get_display_text(self) -> list[str]:
@@ -286,6 +298,58 @@ class DisplayPiece(pygame.sprite.Sprite):
 
     def flip(self):
         self.rect.topleft = pos_to_pygame_coordinates(pygame_coordinates_to_pos(self.rect.topleft), flipped=True)
+
+
+class MoveList(pygame.sprite.Sprite):
+    def __init__(self):
+        """Width: 288, Height: 512"""
+        self.rect = pygame.Rect(512,0, 288, 512)
+        self.move_list = []
+        self.background_colour = preferences[Prefs.BACKGROUND_COLOUR]
+        self.font_colour = preferences[Prefs.CONTRASTING_COLOUR]
+        self.font_size = preferences[Prefs.FONT_SIZE]
+        self.special_colour = preferences[Prefs.MOVE_INDICATOR_COLOUR]
+        self.surface = pygame.surface.Surface((288,512))
+        self.surface.fill(self.background_colour)
+        self.current_idx = 0
+
+    def draw(self, display):
+        display.blit(self.surface, self.rect)
+
+    def append(self, move):
+        self.move_list.append(move)
+        self.update_image()
+
+    def prepend(self, item):
+        self.move_list.insert(0, item)
+    
+    def crop(self, idx):
+        """Crops anything after idx off move_list"""
+        self.move_list = self.move_list[0:idx-1]
+        self.update_image()
+
+    def update_image(self):
+        self.surface = pygame.surface.Surface((288,512))
+        self.surface.fill(self.background_colour)
+        moves_on_row = 0
+        column = 0
+        for i, move in enumerate(self.move_list):
+            if i == self.current_idx:
+                colour = self.special_colour
+            else:
+                colour = self.font_colour
+            self.surface.blit(FONT.render(move, True, colour), (moves_on_row*144,column*self.font_size))
+            moves_on_row += 1
+            if moves_on_row == 2:
+                moves_on_row = 0
+                column += 1
+
+    def set_current_idx(self, idx):
+        self.current_idx = idx
+        self.update_image()
+
+    def increment_idx(self):
+        self.current_idx += 1
 
 
 def pos_to_pygame_coordinates(tup: tuple, flipped: bool = False) -> tuple[int, int]:
