@@ -4,6 +4,7 @@ import tkinter
 import tkinter.filedialog
 import PIL.Image
 import PIL.ImageTk
+from functools import partial
 
 class PersonalisationCustomiser:
     def __init__(self) -> None:
@@ -11,6 +12,7 @@ class PersonalisationCustomiser:
         self.root.title("Personalisation Customiser")
         
         self.images = {}
+        self.image_buttons: dict[int, tkinter.Button] = {}
 
     def run(self):
         # average tkinter program yippee!!
@@ -109,18 +111,19 @@ class PersonalisationCustomiser:
         label.pack()
         image_button = tkinter.Button(frame, width=64, height=64, image=tkinter.PhotoImage(file="images/transparent.png"))
         image_button.pack()
-        browse_button = tkinter.Button(frame, text="Browse", command=lambda: self.browse_image(image_button, piece))
+        self.image_buttons[piece] = image_button
+        browse_button = tkinter.Button(frame, text="Browse", command=partial(self.browse_image, piece))
         browse_button.pack(side=tkinter.BOTTOM)
 
-    def browse_image(self, image_button: tkinter.Button, key: int):
+    def browse_image(self, key: int):
         f_types = [("PNG", "*.png"), ("JPEG", "*.jpg"), ("SVG", "*.svg")]
         image_path = tkinter.filedialog.askopenfilename(filetypes=f_types)
         if image_path:
             self.images[key] = image_path
-            image = PIL.Image.open(image_path)
-            image = image.resize((64, 64))
-            image = PIL.ImageTk.PhotoImage(image)
-            image_button.configure(image=image)  # doesnt currently work
+            selected_image = tkinter.PhotoImage(file=image_path)
+            selected_image = resize_image(selected_image, (64, 64))
+            self.image_buttons[key].configure(image=selected_image)
+            self.root.wait_visibility(self.root)
 
     def make_colour_picker(self, frame, text):
         """Returns a getter function for the rgb tuple, values unvalidated"""
@@ -161,6 +164,21 @@ def dth(num: str) -> str:
     if len(string) == 1:
         return "0" + string
     return string
+
+
+def resize_image(image: tkinter.PhotoImage, size: tuple[int, int]) -> tkinter.PhotoImage:
+    """Method taken from StackOverflow https://stackoverflow.com/questions/3177969/how-to-resize-an-image-using-tkinter"""
+    nw, nh = size
+    oldWidth = image.width()
+    oldHeight = image.height()
+    newPhotoImage = tkinter.PhotoImage(width=nw, height=nh)
+    for x in range(nw):
+        for y in range(nh):
+            xOld = int(x*oldWidth/nw)
+            yOld = int(y*oldHeight/nh)
+            rgb = '#%02x%02x%02x' % image.get(xOld, yOld)
+            newPhotoImage.put(rgb, (x, y))
+    return newPhotoImage
 
 
 def open_window():
