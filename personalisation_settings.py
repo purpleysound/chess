@@ -2,8 +2,6 @@ from utils_and_constants import *
 import pickle
 import tkinter
 import tkinter.filedialog
-import PIL.Image
-import PIL.ImageTk
 from functools import partial
 
 class PersonalisationCustomiser:
