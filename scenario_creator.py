@@ -57,7 +57,7 @@ class ScenarioCreator:
         for piece_type, num_box in self.num_boxes.items():
             try:
                 count = int(num_box.get())
-            except TypeError:
+            except ValueError:
                 self.confirm_button.config(text="Invalid number")
                 return
             for _ in range(count):
