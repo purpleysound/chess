@@ -312,6 +312,7 @@ class MoveList(pygame.sprite.Sprite):
         self.surface = pygame.surface.Surface((288,512))
         self.surface.fill(self.background_colour)
         self.current_idx = 0
+        self.max_length = 512//self.font_size
 
     def draw(self, display):
         display.blit(self.surface, self.rect)
@@ -331,6 +332,11 @@ class MoveList(pygame.sprite.Sprite):
     def update_image(self):
         self.surface = pygame.surface.Surface((288,512))
         self.surface.fill(self.background_colour)
+        column_shift = (len(self.move_list)+1)//2 -self.max_length
+        if column_shift*2 > self.current_idx:
+            column_shift = (self.current_idx-1)//2
+        if column_shift < 0:
+            column_shift = 0
         moves_on_row = 0
         column = 0
         for i, move in enumerate(self.move_list):
@@ -338,7 +344,7 @@ class MoveList(pygame.sprite.Sprite):
                 colour = self.special_colour
             else:
                 colour = self.font_colour
-            self.surface.blit(FONT.render(move, True, colour), (moves_on_row*144,column*self.font_size))
+            self.surface.blit(FONT.render(move, True, colour), (moves_on_row*144,(column-column_shift)*self.font_size))
             moves_on_row += 1
             if moves_on_row == 2:
                 moves_on_row = 0
