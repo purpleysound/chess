@@ -97,7 +97,10 @@ class UserInterface:
                 if event.key == pygame.K_c:
                     pygame.scrap.put(pygame.SCRAP_TEXT, self.game.get_fen().encode())
                 if event.key == pygame.K_v:
-                    self.load_fen(pygame.scrap.get(pygame.SCRAP_TEXT).decode()[:-4])
+                    try:
+                        self.load_fen(pygame.scrap.get(pygame.SCRAP_TEXT).decode()[:-4])
+                    except:
+                        print("Invalid FEN string, make sure it was copied correctly")
                 if event.key == pygame.K_l:
                     print(self.game.get_legal_moves())
                 if event.key == pygame.K_o:
