@@ -38,7 +38,10 @@ class Game:
                 return GameState.BLACK_WINS if self.white_move else GameState.WHITE_WINS
             else:
                 return GameState.DRAW
-        return GameState.ONGOING
+        if self.white_move:
+            return GameState.WHITE_TURN
+        else:
+            return GameState.BLACK_TURN
     
     def get_full_moves_count(self):
         return self.full_moves_count

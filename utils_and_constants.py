@@ -8,13 +8,19 @@ class GameState(enum.Enum):
     WHITE_WINS = 1
     BLACK_WINS = 2
     DRAW = 3
+    WHITE_TURN = 4
+    BLACK_TURN = 5
 
 STATE_TO_STR = {
-    GameState.ONGOING: "ongoing",
-    GameState.WHITE_WINS: "white wins",
-    GameState.BLACK_WINS: "black wins",
-    GameState.DRAW: "draw"
+    GameState.ONGOING: "Ongoing",
+    GameState.WHITE_WINS: "White Wins!",
+    GameState.BLACK_WINS: "Black Wins!",
+    GameState.DRAW: "It's a Draw!",
+    GameState.WHITE_TURN: "White's Turn",
+    GameState.BLACK_TURN: "Black's Turn"
 }
+
+ENDED_STATES = {GameState.WHITE_WINS, GameState.BLACK_WINS, GameState.DRAW}
 
 class Prefs:
     BACKGROUND_COLOUR = 0

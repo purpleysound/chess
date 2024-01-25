@@ -43,6 +43,7 @@ class UserInterface:
         self.pieces: list[list[DisplayPiece | None]] = self.generate_display_pieces()
 
         self.ui_text_mode = 0
+        self.state = GameState.WHITE_TURN
         self.engine_mode = False
         self.engine_playing = False
         self.background_engine = None
@@ -162,7 +163,7 @@ class UserInterface:
         if return_value is None:
             return
         start_pos = pygame_coordinates_to_pos(piece.start_coords, flipped=self.flipped)
-        if self.game.legal_move_with_check_check(start_pos, return_value):
+        if self.state not in ENDED_STATES and self.game.legal_move_with_check_check(start_pos, return_value):
             self.make_move(start_pos, return_value)
         else:
             piece.rect.topleft = piece.start_coords
@@ -186,6 +187,8 @@ class UserInterface:
         if self.auto_flip:
             if self.game.get_white_move() == self.flipped:
                 self.flip()
+        
+        self.state = self.game.get_game_state()
 
     def make_engine_move(self):
         self.engine_playing = not self.engine_playing
@@ -199,6 +202,7 @@ class UserInterface:
     def load_fen(self, fen: str, reset_list_of_FENs: bool = True):
         self.game = Game(fen)
         self.pieces = self.generate_display_pieces()
+        self.state = self.game.get_game_state()
         if reset_list_of_FENs:
             self.list_of_FENs = [self.game.get_fen()]
             self.move_list = MoveList()
@@ -237,16 +241,20 @@ class UserInterface:
         for rank in self.pieces:
             for item in rank:
                 if item is not None and item.held:
-                    for start_pos, end_pos in self.game.legal_moves_from_start_pos_with_check_check(pygame_coordinates_to_pos(item.start_coords, flipped=self.flipped)):
-                        pygame.draw.circle(self.display, preferences[Prefs.MOVE_INDICATOR_COLOUR], vector_add(pos_to_pygame_coordinates(end_pos, flipped=self.flipped), (32, 32)), 8)
+                    if self.state not in ENDED_STATES:
+                        for start_pos, end_pos in self.game.legal_moves_from_start_pos_with_check_check(pygame_coordinates_to_pos(item.start_coords, flipped=self.flipped)):
+                            pygame.draw.circle(self.display, preferences[Prefs.MOVE_INDICATOR_COLOUR], vector_add(pos_to_pygame_coordinates(end_pos, flipped=self.flipped), (32, 32)), 8)
                     item.draw(self.display)
-                    continue
+                    break
+            else:
+                continue  # if break called before, breaks again to break outer loop, else continues
+            break
         pygame.display.update()
 
     def get_display_text(self) -> list[str]:
         display_text = UI_TEXT[self.ui_text_mode].copy()
         if self.ui_text_mode == 0:
-            display_text.append(f"{'White' if self.game.get_white_move() else 'Black'}'s turn")
+            display_text.append(STATE_TO_STR[self.state])
         if self.ui_text_mode == 1:
             display_text.append(f"A. Auto-Flip: {'Enabled' if self.auto_flip else 'Disabled'}")
         if self.ui_text_mode == 3:
@@ -259,7 +267,6 @@ class UserInterface:
             # we actually do want to read the objects internal dictionary
             for key in self.game.__dict__:
                 display_text.append(f"{key}: {self.game.__dict__[key]}")
-            display_text.append(f"Game State: {STATE_TO_STR[self.game.get_game_state()]}")
         return display_text
 
 
