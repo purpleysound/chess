@@ -26,7 +26,7 @@ UI_TEXT = {
     0: ["1. GUI Settings", "2. Import/Export", "3. Engine", "4. Debug"],
     1: ["0. Home", "B. Flip Board", "P. Personalisation Settings", "Left Arrow. Back", "Right Arrow. Forward"],
     2: ["0. Home", "F. Print FEN To Console", "C. Copy FEN To Clipboard", "V. Paste FEN From Clipboard", "O. Open Opening Explorer", "I. Open Endgame Scenarios", "Home. Load Start Position", "End. Clear Board"],
-    3: ["0. Home", "M. Print Engine Move To Console", "S. Start/Stop Playing Against Engine (Players's move when enabled)", "E. Start/Stop Deep Engine Analysis", "Z. Deep Server Analysis"],
+    3: ["0. Home", "M. Print Engine Move To Console", "S. Start/Stop Playing Against Engine (Engine's move when enabled)", "E. Start/Stop Deep Engine Analysis", "Z. Deep Server Analysis"],
     4: ["0. Home", "L. Print Legal Moves To Console"]
 }
 
@@ -120,7 +120,7 @@ class UserInterface:
                     print(engine.get_value_and_best_move(self.game, preferences[Prefs.DEFAULT_ENGINE_DEPTH]))
                 if event.key == pygame.K_s:
                     self.engine_mode = not self.engine_mode
-                    self.engine_playing = True
+                    self.engine_playing = False
                     if self.engine_mode:
                         self.make_engine_move()
                 if event.key == pygame.K_e:
@@ -194,7 +194,7 @@ class UserInterface:
         self.engine_playing = not self.engine_playing
         if self.engine_playing:
             evaluation, best_move = engine.get_value_and_best_move(self.game, preferences[Prefs.DEFAULT_ENGINE_DEPTH])
-            if best_move is None or not (self.game.get_game_state() == GameState.ONGOING):
+            if best_move is None or self.state in ENDED_STATES:
                 print("No legal moves")
                 return
             self.make_move(*best_move)
