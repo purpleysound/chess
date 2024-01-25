@@ -6,7 +6,7 @@ from openings import opening_explorer
 import engine
 import personalisation_settings
 import scenario_creator
-# import requests
+import requests
 
 def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
     image = pygame.image.load(path)
@@ -227,6 +227,9 @@ class UserInterface:
     def draw(self):
         self.display.fill(preferences[Prefs.BACKGROUND_COLOUR])
         self.display.blit(BOARD_IMG, (0, 0))
+        self.move_list.draw(self.display)
+        for i, text in enumerate(self.get_display_text()):
+            self.display.blit(FONT.render(text, True, preferences[Prefs.CONTRASTING_COLOUR]), (0, 512 + i * preferences[Prefs.FONT_SIZE]))
         for rank in self.pieces:
             for item in rank:
                 if item is not None:
@@ -238,9 +241,6 @@ class UserInterface:
                         pygame.draw.circle(self.display, preferences[Prefs.MOVE_INDICATOR_COLOUR], vector_add(pos_to_pygame_coordinates(end_pos, flipped=self.flipped), (32, 32)), 8)
                     item.draw(self.display)
                     continue
-        for i, text in enumerate(self.get_display_text()):
-            self.display.blit(FONT.render(text, True, preferences[Prefs.CONTRASTING_COLOUR]), (0, 512 + i * preferences[Prefs.FONT_SIZE]))
-        self.move_list.draw(self.display)
         pygame.display.update()
 
     def get_display_text(self) -> list[str]:
