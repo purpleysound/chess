@@ -6,7 +6,7 @@ from openings import opening_explorer
 import engine
 import personalisation_settings
 import scenario_creator
-import requests
+# import requests
 
 def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
     image = pygame.image.load(path)
@@ -188,7 +188,10 @@ class UserInterface:
             if self.game.get_white_move() == self.flipped:
                 self.flip()
         
-        self.state = self.game.get_game_state()
+        if self.check_threefold_repetition():
+            self.state = GameState.DRAW
+        else:
+            self.state = self.game.get_game_state()
 
     def make_engine_move(self):
         self.engine_playing = not self.engine_playing
@@ -268,6 +271,13 @@ class UserInterface:
             for key in self.game.__dict__:
                 display_text.append(f"{key}: {self.game.__dict__[key]}")
         return display_text
+    
+    def check_threefold_repetition(self):
+        board_position_fens = list(map(lambda fen: fen.split(" ")[0], self.list_of_FENs))
+        last_board = board_position_fens[-1]
+        if board_position_fens.count(last_board) == 3:
+            return True
+        return False
 
 
 class DisplayPiece(pygame.sprite.Sprite):
