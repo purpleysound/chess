@@ -195,13 +195,18 @@ class UserInterface:
         
 
     def make_engine_move(self):
-        self.engine_playing = not self.engine_playing
-        if self.engine_playing:
-            evaluation, best_move = engine.get_value_and_best_move(self.game, preferences[Prefs.DEFAULT_ENGINE_DEPTH])
-            if best_move is None or self.state in ENDED_STATES:
-                print("No legal moves")
-                return
-            self.make_move(*best_move)
+        try:
+            self.engine_playing = not self.engine_playing
+            if self.engine_playing:
+                evaluation, best_move = engine.get_value_and_best_move(self.game, preferences[Prefs.DEFAULT_ENGINE_DEPTH])
+                if best_move is None or self.state in ENDED_STATES:
+                    print("No legal moves")
+                    return
+                self.make_move(*best_move)
+        except Exception as e:
+            print(f"Unable to make engine move: {e}")
+            self.engine_playing = False
+            self.engine_mode = False
 
     def load_fen(self, fen: str, reset_list_of_FENs: bool = True):
         self.game = Game(fen)
