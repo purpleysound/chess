@@ -118,6 +118,8 @@ def base_evaluation(game: Game):
     global nodes_counted
     nodes_counted += 1
     evaluation = 0
+    castle_wk, castle_wq, castle_bk, castle_bq = game.castling_rights
+    evaluation += 40*(castle_wk + castle_wq - castle_bk - castle_bq)
     w_pawn_count = 0
     b_pawn_count = 0
     piece_count = 0
