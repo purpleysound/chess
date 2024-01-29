@@ -177,6 +177,11 @@ class UserInterface:
         self.move_list.set_current_idx(self.get_current_list_of_FENs_idx()-1)
         self.list_of_FENs.append(self.game.get_fen())
 
+        if self.check_threefold_repetition():
+            self.state = GameState.DRAW
+        else:
+            self.state = self.game.get_game_state()
+
         if self.engine_mode:
             self.draw()  # looks kinda ugly without
             self.make_engine_move()
@@ -188,10 +193,6 @@ class UserInterface:
             if self.game.get_white_move() == self.flipped:
                 self.flip()
         
-        if self.check_threefold_repetition():
-            self.state = GameState.DRAW
-        else:
-            self.state = self.game.get_game_state()
 
     def make_engine_move(self):
         self.engine_playing = not self.engine_playing
