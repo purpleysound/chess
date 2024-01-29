@@ -279,7 +279,7 @@ class UserInterface:
         return display_text
     
     def check_threefold_repetition(self):
-        board_position_fens = list(map(lambda fen: fen.split(" ")[0], self.list_of_FENs))
+        board_position_fens = list(map(lambda fen: fen.split(" ")[0], filter(lambda x: x is not None, self.list_of_FENs)))
         last_board = board_position_fens[-1]
         if board_position_fens.count(last_board) == 3:
             return True
