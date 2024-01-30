@@ -148,11 +148,11 @@ def base_evaluation(game: Game):
     try:
         evaluation += get_piece_value(*w_king_tuple) # type: ignore
     except UnboundLocalError:
-        return -10000
+        return -1000000
     try:
         evaluation += get_piece_value(*b_king_tuple) # type: ignore
     except UnboundLocalError:
-        return 10000
+        return 1000000
     return evaluation
 
 def move_ordering_key(move: tuple[tuple[int, int], tuple[int, int]], game: Game) -> int:
