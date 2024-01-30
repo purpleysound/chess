@@ -118,12 +118,12 @@ def base_evaluation(game: Game):
     global nodes_counted
     nodes_counted += 1
     evaluation = 0
-    castle_wk, castle_wq, castle_bk, castle_bq = game.castling_rights
+    castle_wk, castle_wq, castle_bk, castle_bq = game.get_castling_rights()
     evaluation += 40*(castle_wk + castle_wq - castle_bk - castle_bq)
     w_pawn_count = 0
     b_pawn_count = 0
     piece_count = 0
-    for i, rank in enumerate(game.board):
+    for i, rank in enumerate(game.get_board()):
         for j, item in enumerate(rank):
             if item is not None:
                 piece_type, piece_colour = piece.get_piece_attrs(item)
@@ -172,7 +172,7 @@ def minimax(game: Game, depth: int, alpha: int, beta: int) -> tuple[int, tuple[t
     legal_moves = game.get_legal_moves()
     legal_moves.sort(key=lambda move: move_ordering_key(move, game), reverse=True)
 
-    if game.white_move:
+    if game.get_white_move():
         best_score = int(-1e10)
         best_move = None
         for move in legal_moves:
@@ -222,7 +222,7 @@ def get_value_and_best_move(game: Game, depth: int) -> tuple[int, tuple[tuple[in
                 legal_openings.append((OPENING_VALUES[fen], move))
     if len(legal_openings) > 0:
         weights = [(x[0])+881 for x in legal_openings]  # 880 is the lowest opening value
-        if not game.white_move:
+        if not game.get_white_move():
             weights = [1/x for x in weights]
         moves = [x[1] for x in legal_openings]
         move = random.choices(moves, weights)[0]

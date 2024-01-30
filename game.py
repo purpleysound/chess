@@ -51,6 +51,9 @@ class Game:
     
     def get_board(self):
         return self.board
+    
+    def get_castling_rights(self):
+        return self.castling_rights
 
     def copy(self) -> 'Game':
         copy = Game()
