@@ -359,8 +359,20 @@ class Game:
         start_piece = self.board[start_index][start_jndex]
         assert start_piece is not None
         self.board[start_index][start_jndex] = None
-        if self.board[end_index][end_jndex] is not None:
+
+        to_take = self.board[end_index][end_jndex]
+        if to_take is not None:
             self.half_moves_count = -1
+            if end_pos == (8, 1):
+                self.castling_rights[0] = False
+            elif end_pos == (1, 1):
+                self.castling_rights[1] = False
+            elif end_pos == (8, 8):
+                self.castling_rights[2] = False
+            elif end_pos == (1, 8):
+                self.castling_rights[3] = False
+                    #  These might not be a rook, but in that case they would already be False since the original rook is gone
+                
         self.board[end_index][end_jndex] = start_piece
         self.half_moves_count += 1
         if not self.white_move:
