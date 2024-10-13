@@ -114,7 +114,7 @@ def get_piece_value(piece_type: int, piece_colour: bool, i: int, j: int):
         return value
 
 @lru_cache(maxsize=65536)
-def base_evaluation(game: Game):
+def base_evaluation(game: Game, depth: int):
     global nodes_counted
     nodes_counted += 1
     evaluation = 0
@@ -148,11 +148,11 @@ def base_evaluation(game: Game):
     try:
         evaluation += get_piece_value(*w_king_tuple) # type: ignore
     except UnboundLocalError:
-        return -1000000
+        return -1000000 - depth
     try:
         evaluation += get_piece_value(*b_king_tuple) # type: ignore
     except UnboundLocalError:
-        return 1000000
+        return 1000000 + depth
     return evaluation
 
 def move_ordering_key(move: tuple[tuple[int, int], tuple[int, int]], game: Game) -> int:
@@ -167,7 +167,7 @@ def move_ordering_key(move: tuple[tuple[int, int], tuple[int, int]], game: Game)
 
 def minimax(game: Game, depth: int, alpha: int, beta: int) -> tuple[int, tuple[tuple[int, int], tuple[int, int]] | None]:
     if depth == 0 or game.king_taken():
-        return base_evaluation(game), None
+        return base_evaluation(game, depth), None
     
     legal_moves = game.get_legal_moves()
     legal_moves.sort(key=lambda move: move_ordering_key(move, game), reverse=True)
