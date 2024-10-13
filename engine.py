@@ -221,7 +221,7 @@ def get_value_and_best_move(game: Game, depth: int) -> tuple[int, tuple[tuple[in
             if fen in OPENING_VALUES:
                 legal_openings.append((OPENING_VALUES[fen], move))
     if len(legal_openings) > 0:
-        weights = [(x[0])+881 for x in legal_openings]  # 880 is the lowest opening value
+        weights = [2.718**(((x[0])+881)/40) for x in legal_openings]  # 880 is the lowest opening value
         if not game.get_white_move():
             weights = [1/x for x in weights]
         moves = [x[1] for x in legal_openings]
