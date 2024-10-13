@@ -6,7 +6,7 @@ from openings import opening_explorer
 import engine
 import personalisation_settings
 import scenario_creator
-# import requests
+import requests
 
 def load_image(path: str, size: tuple[int, int]) -> pygame.surface.Surface:
     image = pygame.image.load(path)
